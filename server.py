@@ -159,4 +159,5 @@ def on_send_message(data):
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True, port=3000)
+    port = int(os.environ.get('PORT', 3000))
+    socketio.run(app, debug=False, allow_unsafe_werkzeug=False, port=port)
