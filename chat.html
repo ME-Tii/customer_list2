@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Terminal</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            background-image: radial-gradient(circle, #111 0%, #000 100%);
+        }
+        .sidebar {
+            width: 250px;
+            border-right: 2px solid #00ff00;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 90%;
+            padding: 8px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .user-section {
+            margin-bottom: 20px;
+        }
+        .user-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .user {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #00ff00;
+        }
+        .user:hover {
+            background-color: #111;
+        }
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .chat-title {
+            font-size: 18px;
+            text-shadow: 0 0 5px #00ff00;
+            margin-bottom: 10px;
+        }
+        .messages {
+            flex: 1;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #000;
+            min-height: 300px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message strong {
+            color: #33ff33;
+        }
+        .input-area {
+            display: flex;
+            margin-top: 10px;
+            align-items: center;
+        }
+        .input-area input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        .input-area input[type="file"] {
+            margin-left: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        .input-area button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+        .input-area button:hover {
+            background-color: #33ff33;
+        }
+        .back-button {
+            display: none;
+            margin-bottom: 10px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+        }
+        .user-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .logout-button {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .logout-button:hover {
+            background-color: #33ff33;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="SEARCH USERS">
+        </div>
+        <div class="user-list">
+            <div class="user-section">
+                <h3>ONLINE</h3>
+                <div id="online-users"></div>
+            </div>
+            <div class="user-section">
+                <h3>OFFLINE</h3>
+                <div id="offline-users"></div>
+            </div>
+        </div>
+    </div>
+    <div class="main-chat">
+        <div class="user-info" id="user-info">LOGGED IN AS: </div>
+        <button class="logout-button" id="logout-button">LOGOUT</button>
+        <h2 class="chat-title" id="chat-title">PUBLIC CHAT</h2>
+        <button class="back-button" id="back-button">BACK TO PUBLIC</button>
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="ENTER MESSAGE">
+            <input type="file" id="file-input">
+            <button id="send-button">SEND</button>
+        </div>
+    </div>
+    <script>
+        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        let currentChat = 'public'; // 'public' or username for private
+        let allUsers = [];
+        let onlineUsers = [];
+
+        document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
+
+        socket.emit('join', { username });
+
+        loadMessages();
+
+        fetch('/users')
+            .then(res => res.json())
+            .then(users => {
+                allUsers = users;
+                updateUserLists();
+            });
+
+        socket.on('online_users', (users) => {
+            onlineUsers = users;
+            updateUserLists();
+        });
+
+        socket.on('user_online', (user) => {
+            if (!onlineUsers.includes(user)) {
+                onlineUsers.push(user);
+                updateUserLists();
+            }
+        });
+
+        socket.on('user_offline', (user) => {
+            onlineUsers = onlineUsers.filter(u => u !== user);
+            updateUserLists();
+        });
+
+        socket.on('public_message', (data) => {
+            if (currentChat === 'public') {
+                addMessage(`${data.from}: ${data.message}`);
+            }
+        });
+
+        socket.on('private_message', (data) => {
+            if (currentChat === data.from || currentChat === data.to) {
+                addMessage(`${data.from}: ${data.message}`);
+            }
+        });
+
+        function updateUserLists() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const onlineFiltered = onlineUsers.filter(u => u.toLowerCase().includes(search) && u !== username);
+            const offlineFiltered = allUsers.filter(u => !onlineUsers.includes(u) && u !== username && u.toLowerCase().includes(search));
+
+            document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
+            document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
+        }
+
+        function switchToPrivate(user) {
+            currentChat = user;
+            document.getElementById('chat-title').textContent = `PRIVATE WITH ${user.toUpperCase()}`;
+            document.getElementById('back-button').style.display = 'block';
+            document.getElementById('messages').innerHTML = '';
+            loadMessages();
+        }
+
+        function switchToPublic() {
+            currentChat = 'public';
+            document.getElementById('chat-title').textContent = 'PUBLIC CHAT';
+            document.getElementById('back-button').style.display = 'none';
+            document.getElementById('messages').innerHTML = '';
+            loadMessages();
+        }
+
+        function addMessage(msg) {
+            const div = document.createElement('div');
+            div.className = 'message';
+            if (msg.includes('/uploads/')) {
+                const parts = msg.split(' ');
+                const urlIndex = parts.findIndex(p => p.startsWith('/uploads/'));
+                const url = parts[urlIndex];
+                const filename = url.split('/').pop();
+                const ext = filename.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    div.innerHTML = msg.replace(url, `<img src="${url}" style="max-width: 200px; max-height: 200px;">`);
+                } else {
+                    div.innerHTML = msg.replace(url, `<a href="${url}" download="${filename}" style="color: #00ff00;">${filename}</a>`);
+                }
+            } else {
+                div.innerHTML = msg;
+            }
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        document.getElementById('search').addEventListener('input', updateUserLists);
+
+        document.getElementById('back-button').addEventListener('click', switchToPublic);
+
+        document.getElementById('send-button').addEventListener('click', async () => {
+            const msg = document.getElementById('message-input').value.trim();
+            const fileInput = document.getElementById('file-input');
+            let message = msg;
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.url) {
+                        message += (msg ? ' ' : '') + 'File: ' + data.url;
+                    }
+                } catch (error) {
+                    alert('Upload failed: ' + error.message);
+                    return;
+                }
+                fileInput.value = '';
+            }
+            if (message) {
+                socket.emit('send_message', { username, message, to: currentChat === 'public' ? null : currentChat });
+                document.getElementById('message-input').value = '';
+            }
+        });
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('send-button').click();
+            }
+        });
+
+        function loadMessages() {
+            const params = new URLSearchParams();
+            params.append('username', username);
+            if (currentChat !== 'public') {
+                params.append('to', currentChat);
+            }
+            fetch('/messages?' + params)
+                .then(res => res.json())
+                .then(msgs => {
+                    msgs.forEach(msg => {
+                        addMessage(`${msg.from}: ${msg.message}`);
+                    });
+                });
+        }
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+            socket.emit('leave', { username });
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

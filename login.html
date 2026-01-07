@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Chat System</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: radial-gradient(circle, #111 0%, #000 100%);
+        }
+        .pip-boy {
+            border: 2px solid #00ff00;
+            padding: 20px;
+            background-color: #000;
+            box-shadow: 0 0 10px #00ff00;
+            width: 300px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 24px;
+            text-shadow: 0 0 5px #00ff00;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        input {
+            width: 250px;
+            padding: 8px;
+            margin-bottom: 15px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        button:hover {
+            background-color: #33ff33;
+        }
+        a {
+            color: #00ff00;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="pip-boy">
+        <h1>LOGIN TERMINAL</h1>
+        <form id="loginForm">
+            <label for="username">USERNAME:</label>
+            <input type="text" id="username" required><br>
+            <label for="password">PASSWORD:</label>
+            <input type="password" id="password" required><br>
+            <button type="submit">ACCESS</button>
+        </form>
+        <a href="register.html">REGISTER NEW USER</a>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('ACCESS GRANTED!');
+                    window.location.href = '/chat.html?username=' + encodeURIComponent(username);
+                } else {
+                    alert('ACCESS DENIED: ' + data.message);
+                }
+            } catch (error) {
+                alert('SYSTEM ERROR: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
