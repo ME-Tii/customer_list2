@@ -95,11 +95,15 @@ def serve_upload(filename):
     return send_from_directory('uploads', filename)
 
 @app.route('/admin/user_messages')
-def get_user_messages():
+def admin_get_user_messages():
     username = request.args.get('username')
     print(f"DEBUG: Admin requesting all messages from user: {username}")
     if not username:
         return jsonify({'error': 'Username parameter required'}), 400
+    
+    # Test if route is being reached
+    print(f"DEBUG: Route reached successfully for {username}")
+    
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))
@@ -116,6 +120,10 @@ def get_user_messages():
         })
     conn.close()
     return jsonify(messages)
+
+@app.route('/test_route')
+def test_route():
+    return jsonify({'message': 'Test route working'})
 
 @app.route('/messages')
 def get_messages():
