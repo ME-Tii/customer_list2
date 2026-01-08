@@ -442,7 +442,8 @@
                 { selector: '.user-section h3', property: 'color', value: theme.textColor },
                 { selector: '.search-bar input', property: 'color', value: theme.textColor },
                 { selector: '.search-bar input', property: 'borderColor', value: theme.accentColor },
-                { selector: '.search-bar input', property: 'backgroundColor', value: theme.bgColor }
+                { selector: '.search-bar input', property: 'backgroundColor', value: theme.bgColor },
+                { selector: '.file-link', property: 'color', value: theme.accentColor }
             ];
             
             elementsToUpdate.forEach(({ selector, property, value }) => {
@@ -460,6 +461,12 @@
             const userHeaders = document.querySelectorAll('.user-section h3');
             userHeaders.forEach(el => {
                 el.style.color = theme.textColor;
+            });
+            
+            // Also update file links
+            const fileLinks = document.querySelectorAll('.file-link');
+            fileLinks.forEach(el => {
+                el.style.color = theme.accentColor;
             });
         }
         
@@ -565,7 +572,7 @@
                 if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
                     div.innerHTML = msg.replace(url, `<img src="${url}" style="max-width: 200px; max-height: 200px;">`);
                 } else {
-                    div.innerHTML = msg.replace(url, `<a href="${url}" download="${filename}" style="color: #00ff00;">${filename}</a>`);
+                    div.innerHTML = msg.replace(url, `<a href="${url}" download="${filename}" class="file-link" style="color: var(--accent-color, #00ff00);">${filename}</a>`);
                 }
             } else {
                 div.innerHTML = msg;
