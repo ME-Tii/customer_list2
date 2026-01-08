@@ -43,7 +43,7 @@
         .user-section h3 {
             font-size: 14px;
             margin-bottom: 10px;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--accent-color, #00ff00);
         }
         .user {
             padding: 5px;
@@ -63,7 +63,7 @@
         }
         .chat-title {
             font-size: 18px;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--accent-color, #00ff00);
             margin-bottom: 10px;
         }
         .messages {
@@ -144,14 +144,14 @@
             top: 10px;
             right: 10px;
             font-size: 14px;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--accent-color, #00ff00);
         }
         .online-count {
             position: absolute;
             top: 30px;
             right: 10px;
             font-size: 12px;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--accent-color, #00ff00);
         }
         .logout-button {
             position: absolute;
@@ -467,6 +467,12 @@
             const fileLinks = document.querySelectorAll('.file-link');
             fileLinks.forEach(el => {
                 el.style.color = theme.accentColor;
+            });
+            
+            // Update text shadows
+            const elementsWithShadow = document.querySelectorAll('.user-info, .online-count, .chat-title, .user-section h3');
+            elementsWithShadow.forEach(el => {
+                el.style.textShadow = `0 0 5px ${theme.accentColor}`;
             });
         }
         

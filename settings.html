@@ -12,7 +12,7 @@
             padding: 20px;
         }
         h1 {
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--accent-color, #00ff00);
         }
         .section {
             margin-bottom: 30px;
@@ -349,6 +349,9 @@
                 const elements = document.querySelectorAll(selector);
                 elements.forEach(el => el.style[property] = value);
             });
+            
+            // Update text shadows
+            document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor}`;
         }
 
         function resetTheme() {
