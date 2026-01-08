@@ -146,6 +146,13 @@
             font-size: 14px;
             text-shadow: 0 0 5px #00ff00;
         }
+        .online-count {
+            position: absolute;
+            top: 30px;
+            right: 10px;
+            font-size: 12px;
+            text-shadow: 0 0 5px #00ff00;
+        }
         .logout-button {
             position: absolute;
             top: 60px;
@@ -242,9 +249,16 @@
             .user-info {
                 position: static;
                 font-size: 16px;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
                 padding: 10px;
                 border-bottom: 1px solid var(--accent-color, #00ff00);
+            }
+            
+            .online-count {
+                position: static;
+                font-size: 14px;
+                margin-bottom: 10px;
+                padding: 0 10px;
             }
             
             .logout-button, .admin-button, .settings-button {
@@ -368,6 +382,7 @@
     </div>
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
+        <div class="online-count" id="online-count">USERS ONLINE: 0</div>
         <button class="logout-button" id="logout-button">LOGOUT</button>
         <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
         <button class="settings-button" id="settings-button">SETTINGS</button>
@@ -449,18 +464,21 @@
         socket.on('online_users', (users) => {
             onlineUsers = users;
             updateUserLists();
+            updateOnlineCount();
         });
 
         socket.on('user_online', (user) => {
             if (!onlineUsers.includes(user)) {
                 onlineUsers.push(user);
                 updateUserLists();
+                updateOnlineCount();
             }
         });
 
         socket.on('user_offline', (user) => {
             onlineUsers = onlineUsers.filter(u => u !== user);
             updateUserLists();
+            updateOnlineCount();
         });
 
         socket.on('public_message', (data) => {
@@ -482,6 +500,10 @@
 
             document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
             document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
+        }
+        
+        function updateOnlineCount() {
+            document.getElementById('online-count').textContent = `USERS ONLINE: ${onlineUsers.length}`;
         }
 
         function switchToPrivate(user) {
