@@ -449,6 +449,18 @@
                 const elements = document.querySelectorAll(selector);
                 elements.forEach(el => el.style[property] = value);
             });
+            
+            // Also update dynamically created user elements
+            const userElements = document.querySelectorAll('.user');
+            userElements.forEach(el => {
+                el.style.color = theme.textColor;
+                el.style.borderColor = theme.accentColor;
+            });
+            
+            const userHeaders = document.querySelectorAll('.user-section h3');
+            userHeaders.forEach(el => {
+                el.style.color = theme.textColor;
+            });
         }
         
         // Load saved theme
@@ -512,6 +524,13 @@
 
             document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
             document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
+            
+            // Reapply theme to newly created user list elements
+            const savedTheme = localStorage.getItem(`theme_${username}`);
+            if (savedTheme) {
+                const theme = JSON.parse(savedTheme);
+                applyTheme(theme);
+            }
         }
         
         function updateOnlineCount() {
