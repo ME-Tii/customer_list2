@@ -360,14 +360,9 @@
         }
 
         function viewUserMessages(user) {
-            console.log(`DEBUG: Requesting all messages from ${user}`);
             fetch(`/messages?admin_user=${encodeURIComponent(user)}`)
-                .then(res => {
-                    console.log(`DEBUG: Response status: ${res.status}`);
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(messages => {
-                    console.log(`DEBUG: Received messages:`, messages);
                     const messagesList = document.getElementById('messages-list');
                     messagesList.innerHTML = `<h3>All messages from ${user}:</h3>` + 
                         messages.map(msg => `
@@ -385,7 +380,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error(`DEBUG: Error fetching messages:`, error);
+                    console.error('Error fetching messages:', error);
                 });
         }
 

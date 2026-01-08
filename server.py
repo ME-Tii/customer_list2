@@ -64,41 +64,7 @@ def register_page():
 def chat_page():
     return send_from_directory('.', 'chat.html')
 
-@app.route('/debug_admin_test')
-def debug_admin_test():
-    return jsonify({'message': 'Admin debug route working'})
 
-@app.route('/admin/user_messages')
-def admin_get_user_messages():
-    try:
-        username = request.args.get('username')
-        print(f"DEBUG: Admin requesting all messages from user: {username}")
-        
-        if not username:
-            return jsonify({'error': 'Username parameter required'}), 400
-        
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))
-        rows = c.fetchall()
-        print(f"DEBUG: Found {len(rows)} total messages from {username}")
-        
-        messages = []
-        for row in rows:
-            to_user = row[1] if row[1] else 'Public'
-            messages.append({
-                'from': row[0], 
-                'to': to_user, 
-                'message': row[2], 
-                'timestamp': row[3]
-            })
-        
-        conn.close()
-        return jsonify(messages)
-        
-    except Exception as e:
-        print(f"DEBUG: Error in admin_get_user_messages: {e}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/users')
 def get_users():
@@ -147,13 +113,10 @@ def get_messages():
     
     if admin_user:
         # Admin requesting all messages from a specific user
-        print(f"DEBUG: Admin requesting all messages from {admin_user}")
         c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
         rows = c.fetchall()
-        print(f"DEBUG: Found {len(rows)} total messages from {admin_user}")
         messages = []
         for row in rows:
-            print(f"DEBUG: Message: {row[0]} -> {row[1] if row[1] else 'Public'}: {row[2][:50]}...")
             messages.append({
                 'from': row[0], 
                 'to': row[1] if row[1] else 'Public', 
@@ -164,10 +127,8 @@ def get_messages():
         # Get all messages from a specific user (both public and private)
         c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
         rows = c.fetchall()
-        print(f"DEBUG: Found {len(rows)} messages from {from_user}")
         messages = []
         for row in rows:
-            print(f"DEBUG: Message row: {row}")
             messages.append({
                 'from': row[0], 
                 'to': row[1] if row[1] else 'Public', 
