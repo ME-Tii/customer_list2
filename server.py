@@ -12,6 +12,15 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
+    
+    # Check if users table exists and has the correct structure
+    c.execute('''SELECT sql FROM sqlite_master WHERE type='table' AND name='users' ''')
+    table_info = c.fetchone()
+    
+    if table_info and 'verified' not in table_info[0]:
+        # Drop old table and create new one with verified column
+        c.execute('DROP TABLE users')
+    
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
@@ -22,8 +31,6 @@ def init_db():
 init_db()
 
 online_users = set()
-
-init_db()
 
 def get_user(username):
     conn = sqlite3.connect('users.db')
@@ -81,6 +88,7 @@ def upload_file():
             return jsonify({'url': f'/uploads/{filename}'})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'File processing failed'}), 400
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
@@ -205,8 +213,12 @@ def change_password():
     new_password = data.get('newPassword')
     
     stored_password = get_user(username)
-    if not stored_password or stored_password != current_password:
-        return jsonify({'success': False, 'message': 'Current password incorrect'})
+    if not stored_password:
+        return jsonify({'success': False, 'message': 'User not found'}), 400
+    
+    stored_password_hash, verified = stored_password
+    if stored_password_hash != current_password:
+        return jsonify({'success': False, 'message': 'Current password incorrect'}), 400
     
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
