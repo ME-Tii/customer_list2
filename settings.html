@@ -146,6 +146,7 @@
             document.getElementById('bg-color').value = theme.bgColor || '#000000';
             document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
             updatePreviews();
+            applyTheme(theme);
         }
 
         function updatePreviews() {
@@ -196,7 +197,33 @@
                 accentColor: document.getElementById('accent-color').value
             };
             localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
-            alert('Theme saved! It will be applied when you return to chat.');
+            
+            // Apply theme to current page immediately
+            applyTheme(theme);
+            alert('Theme saved and applied!');
+        }
+        
+        function applyTheme(theme) {
+            document.body.style.backgroundColor = theme.bgColor;
+            document.body.style.color = theme.textColor;
+            
+            // Update all elements
+            const elementsToUpdate = [
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'color', value: theme.textColor },
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'borderColor', value: theme.accentColor },
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'backgroundColor', value: theme.bgColor },
+                { selector: 'button', property: 'backgroundColor', value: theme.accentColor },
+                { selector: 'button', property: 'color', value: theme.bgColor },
+                { selector: '.section', property: 'borderColor', value: theme.accentColor },
+                { selector: '.theme-preview', property: 'borderColor', value: theme.accentColor },
+                { selector: '.back-btn', property: 'backgroundColor', value: theme.accentColor },
+                { selector: '.back-btn', property: 'color', value: theme.bgColor }
+            ];
+            
+            elementsToUpdate.forEach(({ selector, property, value }) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => el.style[property] = value);
+            });
         }
 
         function resetTheme() {

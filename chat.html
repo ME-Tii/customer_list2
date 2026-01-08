@@ -282,6 +282,47 @@
 
         document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
         
+        // Load and apply theme
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            root.style.setProperty('--text-color', theme.textColor);
+            root.style.setProperty('--bg-color', theme.bgColor);
+            root.style.setProperty('--accent-color', theme.accentColor);
+            
+            // Apply theme to existing elements
+            document.body.style.backgroundColor = theme.bgColor;
+            document.body.style.color = theme.textColor;
+            
+            // Update all elements with color styles
+            const elementsToUpdate = [
+                { selector: 'input[type="text"], input[type="file"]', property: 'color', value: theme.textColor },
+                { selector: 'input[type="text"], input[type="file"]', property: 'borderColor', value: theme.accentColor },
+                { selector: 'input[type="text"], input[type="file"]', property: 'backgroundColor', value: theme.bgColor },
+                { selector: 'button', property: 'backgroundColor', value: theme.accentColor },
+                { selector: 'button', property: 'color', value: theme.bgColor },
+                { selector: '.sidebar', property: 'borderColor', value: theme.accentColor },
+                { selector: '.main-chat', property: 'borderColor', value: theme.accentColor },
+                { selector: '.messages', property: 'borderColor', value: theme.accentColor },
+                { selector: '.input-area', property: 'borderColor', value: theme.accentColor },
+                { selector: '.user-info', property: 'color', value: theme.textColor },
+                { selector: '.chat-title', property: 'color', value: theme.textColor },
+                { selector: '.message', property: 'color', theme.textColor },
+                { selector: '.message strong', property: 'color', value: theme.accentColor }
+            ];
+            
+            elementsToUpdate.forEach(({ selector, property, value }) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => el.style[property] = value);
+            });
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem(`theme_${username}`);
+        if (savedTheme) {
+            const theme = JSON.parse(savedTheme);
+            applyTheme(theme);
+        }
+        
         if (username === 'admin') {
             document.getElementById('admin-button').style.display = 'block';
         }
