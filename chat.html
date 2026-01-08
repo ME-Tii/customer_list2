@@ -53,14 +53,12 @@
         .user:hover {
             background-color: #111;
         }
-        .main-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 10px;
-            border-right: 2px solid #00ff00;
-            overflow-x: hidden;
-        }
+            .main-chat {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 90px);
+            }
         .chat-title {
             font-size: 18px;
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
@@ -325,8 +323,8 @@
             }
             
         .messages {
-            height: calc(100vh - 250px);
-            margin-bottom: 60px;
+            height: calc(100vh - 300px);
+            margin-bottom: 10px;
             font-size: 16px;
             line-height: 1.5;
         }
@@ -340,16 +338,17 @@
                 border: 1px solid var(--accent-color, #00ff00);
             }
             
-            .input-area {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 15px;
-                background: var(--bg-color, #000);
-                border-top: 2px solid var(--accent-color, #00ff00);
-                z-index: 100;
-            }
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: var(--bg-color, #000);
+            border-top: 2px solid var(--accent-color, #00ff00);
+            z-index: 100;
+            height: 90px;
+        }
             
             .input-area input[type="text"] {
                 font-size: 16px;
