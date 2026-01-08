@@ -124,6 +124,26 @@ def get_messages():
     conn.close()
     return jsonify(messages)
 
+@app.route('/admin/user_messages/<username>')
+def get_user_messages(username):
+    print(f"DEBUG: Admin requesting all messages from user: {username}")
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))
+    rows = c.fetchall()
+    print(f"DEBUG: Found {len(rows)} total messages from {username}")
+    messages = []
+    for row in rows:
+        print(f"DEBUG: Message: {row[0]} -> {row[1] if row[1] else 'Public'}: {row[2][:50]}...")
+        messages.append({
+            'from': row[0], 
+            'to': row[1] if row[1] else 'Public', 
+            'message': row[2], 
+            'timestamp': row[3]
+        })
+    conn.close()
+    return jsonify(messages)
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()

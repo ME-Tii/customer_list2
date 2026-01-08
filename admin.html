@@ -360,14 +360,19 @@
         }
 
         function viewUserMessages(user) {
-            fetch(`/messages?from=${user}`)
-                .then(res => res.json())
+            console.log(`DEBUG: Requesting all messages from ${user}`);
+            fetch(`/admin/user_messages/${user}`)
+                .then(res => {
+                    console.log(`DEBUG: Response status: ${res.status}`);
+                    return res.json();
+                })
                 .then(messages => {
+                    console.log(`DEBUG: Received messages:`, messages);
                     const messagesList = document.getElementById('messages-list');
                     messagesList.innerHTML = `<h3>All messages from ${user}:</h3>` + 
                         messages.map(msg => `
                             <div class="message-item">
-                                <strong>${msg.from}</strong> ${msg.to ? `-> ${msg.to === 'Public' ? 'Public' : msg.to}` : ''}: ${msg.message}
+                                <strong>${msg.from}</strong> ${msg.to ? `-> ${msg.to}` : ''}: ${msg.message}
                                 <br><small>${msg.timestamp}</small>
                             </div>
                         `).join('');
@@ -378,6 +383,9 @@
                         const theme = JSON.parse(savedTheme);
                         applyTheme(theme);
                     }
+                })
+                .catch(error => {
+                    console.error(`DEBUG: Error fetching messages:`, error);
                 });
         }
 
