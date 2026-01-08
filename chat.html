@@ -53,12 +53,12 @@
         .user:hover {
             background-color: #111;
         }
-            .main-chat {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                height: calc(100vh - 90px);
-            }
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
         .chat-title {
             font-size: 18px;
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
@@ -70,8 +70,6 @@
             padding: 10px;
             overflow-y: auto;
             background-color: #000;
-            min-height: 300px;
-            height: calc(100vh - 250px);
         }
         .message {
             margin-bottom: 10px;
@@ -411,15 +409,11 @@
                 font-size: 16px;
             }
             
-            .input-area {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 15px;
-                background: var(--bg-color, #000);
-                border-top: 2px solid var(--accent-color, #00ff00);
-            }
+        .input-area {
+            display: flex;
+            margin-top: 10px;
+            align-items: center;
+        }
             
             .input-area input[type="text"] {
                 font-size: 16px;
