@@ -198,22 +198,91 @@
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
+                font-size: 16px;
             }
             
             .sidebar {
                 width: 100%;
                 border-right: none;
-                border-bottom: 2px solid #00ff00;
-                max-height: 200px;
+                border-bottom: 2px solid var(--accent-color, #00ff00);
+                max-height: 150px;
+            }
+            
+            .search-bar {
+                margin-bottom: 10px;
+            }
+            
+            .search-bar input {
+                font-size: 16px;
+                padding: 12px;
+                width: 100%;
             }
             
             .user-list {
-                max-height: 150px;
+                max-height: 100px;
+            }
+            
+            .user {
+                padding: 8px 12px;
+                font-size: 16px;
+                border-bottom: 1px solid var(--accent-color, #00ff00);
+            }
+            
+            .user-section h3 {
+                font-size: 16px;
+                margin: 5px 0;
             }
             
             .main-chat {
                 border-right: none;
-                padding: 5px;
+                padding: 10px;
+                position: relative;
+            }
+            
+            .user-info {
+                position: static;
+                font-size: 16px;
+                margin-bottom: 10px;
+                padding: 10px;
+                border-bottom: 1px solid var(--accent-color, #00ff00);
+            }
+            
+            .logout-button, .admin-button, .settings-button {
+                position: static;
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+                padding: 15px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            
+            .back-button {
+                position: static;
+                width: 100%;
+                margin: 10px 0;
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            .chat-title {
+                font-size: 20px;
+                margin: 15px 0;
+                padding: 10px;
+                border-bottom: 1px solid var(--accent-color, #00ff00);
+            }
+            
+            .messages {
+                height: calc(100vh - 320px);
+                margin-bottom: 80px;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+            
+            .message {
+                margin-bottom: 15px;
+                padding: 10px;
+                font-size: 16px;
             }
             
             .input-area {
@@ -221,23 +290,62 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                padding: 10px;
+                padding: 15px;
+                background: var(--bg-color, #000);
+                border-top: 2px solid var(--accent-color, #00ff00);
+            }
+            
+            .input-area input[type="text"] {
+                font-size: 16px;
+                padding: 12px;
+                margin-right: 10px;
+                flex: 1;
+            }
+            
+            .input-area input[type="file"] {
+                margin-right: 10px;
+                margin-bottom: 0;
+            }
+            
+            .input-area button {
+                padding: 12px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                margin: 0;
+            }
+            
+            /* Touch-friendly spacing */
+            .user, button, input {
+                min-height: 44px;
+            }
+            
+            /* Ensure readability */
+            body, .message, input, button {
+                min-font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sidebar {
+                max-height: 120px;
             }
             
             .messages {
-                height: calc(100vh - 250px);
-                margin-bottom: 60px;
+                height: calc(100vh - 280px);
             }
             
-            .user-info, .logout-button, .admin-button, .settings-button {
-                position: static;
-                display: inline-block;
-                margin: 5px;
+            .input-area {
+                padding: 10px;
             }
             
-            .chat-title {
+            .input-area input[type="text"] {
                 font-size: 14px;
-                margin: 10px 0;
+                padding: 10px;
+            }
+            
+            .input-area button {
+                padding: 10px 15px;
+                font-size: 14px;
             }
         }
     </style>

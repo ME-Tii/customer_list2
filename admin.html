@@ -74,6 +74,124 @@
             margin-bottom: 5px;
             font-size: 12px;
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            .back-btn {
+                position: static;
+                display: block;
+                width: 100%;
+                margin: 20px 0;
+                padding: 15px;
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+            }
+            
+            .section {
+                margin-bottom: 25px;
+                padding: 20px;
+            }
+            
+            .section h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .user-item {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .user-item span {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            .user-item div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+                font-weight: bold;
+                margin: 0;
+                min-height: 44px;
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .delete-btn {
+                background-color: #ff0000;
+            }
+            
+            .messages-list {
+                max-height: 300px;
+                padding: 15px;
+                font-size: 14px;
+            }
+            
+            .message-item {
+                margin-bottom: 10px;
+                font-size: 14px;
+                line-height: 1.4;
+                padding: 10px;
+                border-bottom: 1px solid #00ff00;
+            }
+            
+            .message-item strong {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 16px;
+            }
+            
+            .message-item small {
+                font-size: 12px;
+                color: #888;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .section h2 {
+                font-size: 18px;
+            }
+            
+            .user-item div {
+                flex-direction: column;
+            }
+            
+            button {
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
     </style>
 </head>
 <body>
