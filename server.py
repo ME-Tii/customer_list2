@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room
+from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
@@ -72,7 +73,7 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    if file:
+    if file and file.filename:
         filename = secure_filename(file.filename)
         filepath = os.path.join('uploads', filename)
         try:
@@ -130,14 +131,14 @@ def on_join(data):
     username = data['username']
     online_users.add(username)
     join_room(username)
-    emit('user_online', username, broadcast=True, skip_sid=request.sid)
+    emit('user_online', username, broadcast=True, include_self=False)
     emit('online_users', list(online_users))
 
 @socketio.on('leave')
 def on_leave(data):
     username = data['username']
     online_users.discard(username)
-    emit('user_offline', username, broadcast=True, skip_sid=request.sid)
+    emit('user_offline', username, broadcast=True, include_self=False)
 
 @socketio.on('send_message')
 def on_send_message(data):
@@ -152,12 +153,12 @@ def on_send_message(data):
     conn.close()
     if to_user:
         # Private message
-        emit('private_message', {'from': username, 'message': message, 'to': to_user}, room=to_user)
-        emit('private_message', {'from': username, 'message': message, 'to': to_user}, room=username)
+        emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
+        emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 3000))
-    socketio.run(app, debug=False, allow_unsafe_werkzeug=False, port=port)
+    port = int(os.environ.get('PORT', 10000))
+    socketio.run(app, host='0.0.0.0', debug=False, allow_unsafe_werkzeug=False, port=port)
