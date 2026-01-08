@@ -124,9 +124,12 @@ def get_messages():
     conn.close()
     return jsonify(messages)
 
-@app.route('/admin/user_messages/<username>')
-def get_user_messages(username):
+@app.route('/admin/user_messages')
+def get_user_messages():
+    username = request.args.get('username')
     print(f"DEBUG: Admin requesting all messages from user: {username}")
+    if not username:
+        return jsonify({'error': 'Username parameter required'}), 400
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))

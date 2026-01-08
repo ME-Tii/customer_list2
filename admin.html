@@ -361,7 +361,7 @@
 
         function viewUserMessages(user) {
             console.log(`DEBUG: Requesting all messages from ${user}`);
-            fetch(`/admin/user_messages/${user}`)
+            fetch(`/admin/user_messages?username=${encodeURIComponent(user)}`)
                 .then(res => {
                     console.log(`DEBUG: Response status: ${res.status}`);
                     return res.json();
