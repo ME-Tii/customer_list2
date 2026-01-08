@@ -64,36 +64,6 @@ def register_page():
 def chat_page():
     return send_from_directory('.', 'chat.html')
 
-@app.route('/users')
-def get_users():
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT username FROM users')
-    users = [row[0] for row in c.fetchall()]
-    conn.close()
-    return jsonify(users)
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if file and file.filename:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join('uploads', filename)
-        try:
-            file.save(filepath)
-            return jsonify({'url': f'/uploads/{filename}'})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    return jsonify({'error': 'File processing failed'}), 400
-
-@app.route('/uploads/<path:filename>')
-def serve_upload(filename):
-    return send_from_directory('uploads', filename)
-
 @app.route('/admin/user_messages')
 def admin_get_user_messages():
     try:
@@ -125,6 +95,37 @@ def admin_get_user_messages():
     except Exception as e:
         print(f"DEBUG: Error in admin_get_user_messages: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/users')
+def get_users():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT username FROM users')
+    users = [row[0] for row in c.fetchall()]
+    conn.close()
+    return jsonify(users)
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join('uploads', filename)
+        try:
+            file.save(filepath)
+            return jsonify({'url': f'/uploads/{filename}'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'File processing failed'}), 400
+
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    return send_from_directory('uploads', filename)
+
 
 @app.route('/test_route')
 def test_route():
