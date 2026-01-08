@@ -171,6 +171,44 @@ def reset_db():
     conn.close()
     return jsonify({'message': 'Database reset successfully'})
 
+@app.route('/settings.html')
+def settings_page():
+    return send_from_directory('.', 'settings.html')
+
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    data = request.get_json()
+    username = data.get('username')
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+    
+    stored_password = get_user(username)
+    if not stored_password or stored_password != current_password:
+        return jsonify({'success': False, 'message': 'Current password incorrect'})
+    
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('UPDATE users SET password = ? WHERE username = ?', (new_password, username))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': 'Password changed successfully'})
+
+@app.route('/delete_account', methods=['DELETE'])
+def delete_account():
+    data = request.get_json()
+    username = data.get('username')
+    
+    if username == 'admin':
+        return jsonify({'success': False, 'message': 'Cannot delete admin account'})
+    
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM users WHERE username = ?', (username,))
+    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?', (username, username))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': 'Account deleted successfully'})
+
 @socketio.on('join')
 def on_join(data):
     username = data['username']

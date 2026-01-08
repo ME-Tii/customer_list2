@@ -160,6 +160,22 @@
         .admin-button:hover {
             background-color: #ff6666;
         }
+        .settings-button {
+            position: absolute;
+            top: 140px;
+            right: 10px;
+            background-color: #ffaa00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .settings-button:hover {
+            background-color: #ffcc66;
+        }
     </style>
 </head>
 <body>
@@ -182,6 +198,7 @@
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <button class="logout-button" id="logout-button">LOGOUT</button>
         <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
+        <button class="settings-button" id="settings-button">SETTINGS</button>
         <h2 class="chat-title" id="chat-title">PUBLIC CHAT</h2>
         <button class="back-button" id="back-button">BACK TO PUBLIC</button>
         <div class="messages" id="messages"></div>
@@ -351,6 +368,10 @@
 
         document.getElementById('admin-button').addEventListener('click', () => {
             window.location.href = `/admin.html?username=${username}`;
+        });
+
+        document.getElementById('settings-button').addEventListener('click', () => {
+            window.location.href = `/settings.html?username=${username}`;
         });
     </script>
 </body>

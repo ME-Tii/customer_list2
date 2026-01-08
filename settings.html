@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #00ff00;
+            padding: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        input[type="text"], input[type="password"], input[type="color"] {
+            width: 100%;
+            padding: 8px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+        }
+        button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #33ff33;
+        }
+        .delete-btn {
+            background-color: #ff0000;
+        }
+        .delete-btn:hover {
+            background-color: #ff6666;
+        }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            background-color: #33ff33;
+        }
+        .theme-preview {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #00ff00;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SETTINGS</h1>
+    <a href="chat.html?username=admin" class="back-btn" id="back-btn">BACK TO CHAT</a>
+    
+    <div class="section">
+        <h2>ACCOUNT SETTINGS</h2>
+        <div class="form-group">
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" placeholder="Enter current password">
+        </div>
+        <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" placeholder="Enter new password">
+        </div>
+        <div class="form-group">
+            <label for="confirm-password">Confirm New Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm new password">
+        </div>
+        <button onclick="changePassword()">CHANGE PASSWORD</button>
+    </div>
+    
+    <div class="section">
+        <h2>THEME SETTINGS</h2>
+        <div class="form-group">
+            <label for="text-color">Text Color</label>
+            <input type="color" id="text-color" value="#00ff00">
+            <span class="theme-preview" id="text-preview" style="background-color: #00ff00;"></span>
+        </div>
+        <div class="form-group">
+            <label for="bg-color">Background Color</label>
+            <input type="color" id="bg-color" value="#000000">
+            <span class="theme-preview" id="bg-preview" style="background-color: #000000;"></span>
+        </div>
+        <div class="form-group">
+            <label for="accent-color">Accent Color</label>
+            <input type="color" id="accent-color" value="#00ff00">
+            <span class="theme-preview" id="accent-preview" style="background-color: #00ff00;"></span>
+        </div>
+        <button onclick="saveTheme()">SAVE THEME</button>
+        <button onclick="resetTheme()">RESET THEME</button>
+    </div>
+    
+    <div class="section">
+        <h2>DANGER ZONE</h2>
+        <button class="delete-btn" onclick="deleteAccount()">DELETE ACCOUNT</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        
+        document.getElementById('back-btn').href = `chat.html?username=${username}`;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem(`theme_${username}`);
+        if (savedTheme) {
+            const theme = JSON.parse(savedTheme);
+            document.getElementById('text-color').value = theme.textColor || '#00ff00';
+            document.getElementById('bg-color').value = theme.bgColor || '#000000';
+            document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
+            updatePreviews();
+        }
+
+        function updatePreviews() {
+            document.getElementById('text-preview').style.backgroundColor = document.getElementById('text-color').value;
+            document.getElementById('bg-preview').style.backgroundColor = document.getElementById('bg-color').value;
+            document.getElementById('accent-preview').style.backgroundColor = document.getElementById('accent-color').value;
+        }
+
+        document.getElementById('text-color').addEventListener('input', updatePreviews);
+        document.getElementById('bg-color').addEventListener('input', updatePreviews);
+        document.getElementById('accent-color').addEventListener('input', updatePreviews);
+
+        function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill all password fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            fetch('/change_password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, currentPassword, newPassword})
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                }
+            });
+        }
+
+        function saveTheme() {
+            const theme = {
+                textColor: document.getElementById('text-color').value,
+                bgColor: document.getElementById('bg-color').value,
+                accentColor: document.getElementById('accent-color').value
+            };
+            localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
+            alert('Theme saved! It will be applied when you return to chat.');
+        }
+
+        function resetTheme() {
+            localStorage.removeItem(`theme_${username}`);
+            document.getElementById('text-color').value = '#00ff00';
+            document.getElementById('bg-color').value = '#000000';
+            document.getElementById('accent-color').value = '#00ff00';
+            updatePreviews();
+            alert('Theme reset to default');
+        }
+
+        function deleteAccount() {
+            if (username === 'admin') {
+                alert('Cannot delete admin account');
+                return;
+            }
+            if (confirm(`Delete account ${username}? This action cannot be undone.`)) {
+                fetch('/delete_account', {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) {
+                        window.location.href = '/';
+                    }
+                });
+            }
+        }
+
+        updatePreviews();
+    </script>
+</body>
+</html>
