@@ -94,6 +94,29 @@ def upload_file():
 def serve_upload(filename):
     return send_from_directory('uploads', filename)
 
+@app.route('/admin/user_messages')
+def get_user_messages():
+    username = request.args.get('username')
+    print(f"DEBUG: Admin requesting all messages from user: {username}")
+    if not username:
+        return jsonify({'error': 'Username parameter required'}), 400
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))
+    rows = c.fetchall()
+    print(f"DEBUG: Found {len(rows)} total messages from {username}")
+    messages = []
+    for row in rows:
+        print(f"DEBUG: Message: {row[0]} -> {row[1] if row[1] else 'Public'}: {row[2][:50]}...")
+        messages.append({
+            'from': row[0], 
+            'to': row[1] if row[1] else 'Public', 
+            'message': row[2], 
+            'timestamp': row[3]
+        })
+    conn.close()
+    return jsonify(messages)
+
 @app.route('/messages')
 def get_messages():
     username = request.args.get('username')
@@ -121,29 +144,6 @@ def get_messages():
     else:
         c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
         messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
-    conn.close()
-    return jsonify(messages)
-
-@app.route('/admin/user_messages')
-def get_user_messages():
-    username = request.args.get('username')
-    print(f"DEBUG: Admin requesting all messages from user: {username}")
-    if not username:
-        return jsonify({'error': 'Username parameter required'}), 400
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (username,))
-    rows = c.fetchall()
-    print(f"DEBUG: Found {len(rows)} total messages from {username}")
-    messages = []
-    for row in rows:
-        print(f"DEBUG: Message: {row[0]} -> {row[1] if row[1] else 'Public'}: {row[2][:50]}...")
-        messages.append({
-            'from': row[0], 
-            'to': row[1] if row[1] else 'Public', 
-            'message': row[2], 
-            'timestamp': row[3]
-        })
     conn.close()
     return jsonify(messages)
 
