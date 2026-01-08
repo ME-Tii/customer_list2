@@ -98,13 +98,19 @@ def serve_upload(filename):
 def get_messages():
     username = request.args.get('username')
     to_user = request.args.get('to')
+    from_user = request.args.get('from')
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    if to_user:
+    if from_user:
+        # Get all messages from a specific user (both public and private)
+        c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
+        messages = [{'from': row[0], 'to': row[1], 'message': row[2], 'timestamp': row[3]} for row in c.fetchall()]
+    elif to_user:
         c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp', (username, to_user, to_user, username))
+        messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
     else:
         c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
-    messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
+        messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
     conn.close()
     return jsonify(messages)
 

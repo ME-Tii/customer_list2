@@ -360,14 +360,14 @@
         }
 
         function viewUserMessages(user) {
-            fetch(`/messages?username=admin&to=${user}`)
+            fetch(`/messages?from=${user}`)
                 .then(res => res.json())
                 .then(messages => {
                     const messagesList = document.getElementById('messages-list');
-                    messagesList.innerHTML = `<h3>Messages with ${user}:</h3>` + 
+                    messagesList.innerHTML = `<h3>All messages from ${user}:</h3>` + 
                         messages.map(msg => `
                             <div class="message-item">
-                                <strong>${msg.from}</strong>: ${msg.message}
+                                <strong>${msg.from}</strong> ${msg.to ? `-> ${msg.to === 'Public' ? 'Public' : msg.to}` : ''}: ${msg.message}
                                 <br><small>${msg.timestamp}</small>
                             </div>
                         `).join('');
