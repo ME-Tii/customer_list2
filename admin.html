@@ -223,6 +223,38 @@
         if (username !== 'admin') {
             window.location.href = '/';
         }
+        
+        // Load and apply theme
+        function applyTheme(theme) {
+            document.body.style.backgroundColor = theme.bgColor;
+            document.body.style.color = theme.textColor;
+            
+            // Update all elements
+            const elementsToUpdate = [
+                { selector: '.section', property: 'borderColor', value: theme.accentColor },
+                { selector: 'button', property: 'backgroundColor', value: theme.accentColor },
+                { selector: 'button', property: 'color', value: theme.bgColor },
+                { selector: '.delete-btn', property: 'backgroundColor', value: '#ff0000' },
+                { selector: '.delete-btn', property: 'color', value: theme.bgColor },
+                { selector: '.back-btn', property: 'backgroundColor', value: theme.accentColor },
+                { selector: '.back-btn', property: 'color', value: theme.bgColor },
+                { selector: '.user-item', property: 'borderColor', value: theme.accentColor },
+                { selector: '.messages-list', property: 'borderColor', value: theme.accentColor },
+                { selector: '.message-item strong', property: 'color', value: theme.accentColor }
+            ];
+            
+            elementsToUpdate.forEach(({ selector, property, value }) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => el.style[property] = value);
+            });
+        }
+        
+        // Load saved theme for admin
+        const savedTheme = localStorage.getItem(`theme_${username}`);
+        if (savedTheme) {
+            const theme = JSON.parse(savedTheme);
+            applyTheme(theme);
+        }
 
         function loadUsers() {
             fetch('/admin/get_users')
@@ -239,6 +271,13 @@
                             </div>
                         </div>
                     `).join('');
+                    
+                    // Reapply theme to newly created elements
+                    const savedTheme = localStorage.getItem(`theme_${username}`);
+                    if (savedTheme) {
+                        const theme = JSON.parse(savedTheme);
+                        applyTheme(theme);
+                    }
                 });
         }
 
@@ -253,6 +292,13 @@
                             <br><small>${msg.timestamp}</small>
                         </div>
                     `).join('');
+                    
+                    // Reapply theme to newly created elements
+                    const savedTheme = localStorage.getItem(`theme_${username}`);
+                    if (savedTheme) {
+                        const theme = JSON.parse(savedTheme);
+                        applyTheme(theme);
+                    }
                 });
         }
 
@@ -322,6 +368,13 @@
                                 <br><small>${msg.timestamp}</small>
                             </div>
                         `).join('');
+                    
+                    // Reapply theme to newly created elements
+                    const savedTheme = localStorage.getItem(`theme_${username}`);
+                    if (savedTheme) {
+                        const theme = JSON.parse(savedTheme);
+                        applyTheme(theme);
+                    }
                 });
         }
 
