@@ -223,6 +223,9 @@
                 font-size: 16px;
                 padding: 12px;
                 width: 100%;
+                color: var(--text-color, #00ff00);
+                border-color: var(--accent-color, #00ff00);
+                background-color: var(--bg-color, #000);
             }
             
             .user-list {
@@ -233,11 +236,13 @@
                 padding: 8px 12px;
                 font-size: 16px;
                 border-bottom: 1px solid var(--accent-color, #00ff00);
+                color: var(--text-color, #00ff00);
             }
             
             .user-section h3 {
                 font-size: 16px;
                 margin: 5px 0;
+                color: var(--text-color, #00ff00);
             }
             
             .main-chat {
@@ -428,9 +433,16 @@
                 { selector: '.messages', property: 'borderColor', value: theme.accentColor },
                 { selector: '.input-area', property: 'borderColor', value: theme.accentColor },
                 { selector: '.user-info', property: 'color', value: theme.textColor },
+                { selector: '.online-count', property: 'color', value: theme.textColor },
                 { selector: '.chat-title', property: 'color', value: theme.textColor },
                 { selector: '.message', property: 'color', value: theme.textColor },
-                { selector: '.message strong', property: 'color', value: theme.accentColor }
+                { selector: '.message strong', property: 'color', value: theme.accentColor },
+                { selector: '.user', property: 'color', value: theme.textColor },
+                { selector: '.user', property: 'borderColor', value: theme.accentColor },
+                { selector: '.user-section h3', property: 'color', value: theme.textColor },
+                { selector: '.search-bar input', property: 'color', value: theme.textColor },
+                { selector: '.search-bar input', property: 'borderColor', value: theme.accentColor },
+                { selector: '.search-bar input', property: 'backgroundColor', value: theme.bgColor }
             ];
             
             elementsToUpdate.forEach(({ selector, property, value }) => {
