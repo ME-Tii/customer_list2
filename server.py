@@ -140,9 +140,27 @@ def get_messages():
     username = request.args.get('username')
     to_user = request.args.get('to')
     from_user = request.args.get('from')
+    admin_user = request.args.get('admin_user')  # New parameter for admin request
+    
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    if from_user:
+    
+    if admin_user:
+        # Admin requesting all messages from a specific user
+        print(f"DEBUG: Admin requesting all messages from {admin_user}")
+        c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
+        rows = c.fetchall()
+        print(f"DEBUG: Found {len(rows)} total messages from {admin_user}")
+        messages = []
+        for row in rows:
+            print(f"DEBUG: Message: {row[0]} -> {row[1] if row[1] else 'Public'}: {row[2][:50]}...")
+            messages.append({
+                'from': row[0], 
+                'to': row[1] if row[1] else 'Public', 
+                'message': row[2], 
+                'timestamp': row[3]
+            })
+    elif from_user:
         # Get all messages from a specific user (both public and private)
         c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
         rows = c.fetchall()
