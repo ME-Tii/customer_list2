@@ -58,6 +58,8 @@
             display: flex;
             flex-direction: column;
             padding: 10px;
+            border-right: 2px solid #00ff00;
+            overflow-x: hidden;
         }
         .chat-title {
             font-size: 18px;
@@ -65,15 +67,23 @@
             margin-bottom: 10px;
         }
         .messages {
-            flex: 1;
+            height: calc(100vh - 200px);
             border: 1px solid #00ff00;
             padding: 10px;
             overflow-y: auto;
+            overflow-x: hidden;
             background-color: #000;
-            min-height: 300px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .message {
             margin-bottom: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .message strong {
             color: #33ff33;
@@ -82,6 +92,13 @@
             display: flex;
             margin-top: 10px;
             align-items: center;
+            border-top: 1px solid #00ff00;
+            padding-top: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 10px;
+            background-color: #000;
         }
         .input-area input[type="text"] {
             flex: 1;
@@ -90,6 +107,7 @@
             border: 1px solid #00ff00;
             color: #00ff00;
             font-family: 'Courier New', monospace;
+            min-width: 0;
         }
         .input-area input[type="file"] {
             margin-left: 10px;
@@ -175,6 +193,52 @@
         }
         .settings-button:hover {
             background-color: #ffcc66;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid #00ff00;
+                max-height: 200px;
+            }
+            
+            .user-list {
+                max-height: 150px;
+            }
+            
+            .main-chat {
+                border-right: none;
+                padding: 5px;
+            }
+            
+            .input-area {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px;
+            }
+            
+            .messages {
+                height: calc(100vh - 250px);
+                margin-bottom: 60px;
+            }
+            
+            .user-info, .logout-button, .admin-button, .settings-button {
+                position: static;
+                display: inline-block;
+                margin: 5px;
+            }
+            
+            .chat-title {
+                font-size: 14px;
+                margin: 10px 0;
+            }
         }
     </style>
 </head>
