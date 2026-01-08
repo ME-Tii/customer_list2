@@ -64,6 +64,10 @@ def register_page():
 def chat_page():
     return send_from_directory('.', 'chat.html')
 
+@app.route('/debug_admin_test')
+def debug_admin_test():
+    return jsonify({'message': 'Admin debug route working'})
+
 @app.route('/admin/user_messages')
 def admin_get_user_messages():
     try:
