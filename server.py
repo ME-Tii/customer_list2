@@ -118,13 +118,58 @@ def register():
     password = data.get('password')
     confirm_password = data.get('confirm_password')
     if not username or not password:
-        return jsonify({'success': False, 'message': 'Username and password required'}), 400
+        return jsonify({'success': False, 'message': 'Username and password required'})
     if password != confirm_password:
-        return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+        return jsonify({'success': False, 'message': 'Passwords do not match'})
     if get_user(username):
-        return jsonify({'success': False, 'message': 'User already exists'}), 409
+        return jsonify({'success': False, 'message': 'User already exists'})
     add_user(username, password)
     return jsonify({'success': True, 'message': 'Registration successful'})
+
+@app.route('/admin.html')
+def admin_page():
+    return send_from_directory('.', 'admin.html')
+
+@app.route('/admin/delete_user/<username>', methods=['DELETE'])
+def delete_user(username):
+    if username == 'admin':
+        return jsonify({'message': 'Cannot delete admin user'})
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM users WHERE username = ?', (username,))
+    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?', (username, username))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'User {username} deleted successfully'})
+
+@app.route('/admin/delete_all_messages', methods=['DELETE'])
+def delete_all_messages():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM messages')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'All messages deleted successfully'})
+
+@app.route('/admin/delete_all_users', methods=['DELETE'])
+def delete_all_users():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM users WHERE username != ?', ('admin',))
+    c.execute('DELETE FROM messages WHERE from_user != ? AND to_user != ?', ('admin', 'admin'))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'All users (except admin) deleted successfully'})
+
+@app.route('/admin/reset_db', methods=['DELETE'])
+def reset_db():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM users WHERE username != ?', ('admin',))
+    c.execute('DELETE FROM messages')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Database reset successfully'})
 
 @socketio.on('join')
 def on_join(data):

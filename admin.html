@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Settings</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #00ff00;
+            padding: 15px;
+        }
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            margin-left: 5px;
+        }
+        button:hover {
+            background-color: #33ff33;
+        }
+        .delete-btn {
+            background-color: #ff0000;
+        }
+        .delete-btn:hover {
+            background-color: #ff6666;
+        }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .messages-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            background-color: #111;
+        }
+        .message-item {
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ADMIN SETTINGS</h1>
+    <button class="back-btn" onclick="window.location.href='chat.html?username=admin'">BACK TO CHAT</button>
+    
+    <div class="section">
+        <h2>USERS</h2>
+        <div id="users-list"></div>
+    </div>
+    
+    <div class="section">
+        <h2>MESSAGES</h2>
+        <button onclick="loadMessages()">REFRESH MESSAGES</button>
+        <div id="messages-list" class="messages-list"></div>
+    </div>
+    
+    <div class="section">
+        <h2>DATABASE ACTIONS</h2>
+        <button onclick="deleteAllMessages()">DELETE ALL MESSAGES</button>
+        <button onclick="deleteAllUsers()">DELETE ALL USERS</button>
+        <button class="delete-btn" onclick="resetDatabase()">RESET DATABASE</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        
+        if (username !== 'admin') {
+            window.location.href = '/';
+        }
+
+        function loadUsers() {
+            fetch('/users')
+                .then(res => res.json())
+                .then(users => {
+                    const usersList = document.getElementById('users-list');
+                    usersList.innerHTML = users.map(user => `
+                        <div class="user-item">
+                            <span>${user}</span>
+                            <div>
+                                <button onclick="viewUserMessages('${user}')">VIEW MESSAGES</button>
+                                ${user !== 'admin' ? `<button class="delete-btn" onclick="deleteUser('${user}')">DELETE</button>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function loadMessages() {
+            fetch('/messages')
+                .then(res => res.json())
+                .then(messages => {
+                    const messagesList = document.getElementById('messages-list');
+                    messagesList.innerHTML = messages.map(msg => `
+                        <div class="message-item">
+                            <strong>${msg.from}</strong> -> <strong>${msg.to || 'Public'}</strong>: ${msg.message}
+                            <br><small>${msg.timestamp}</small>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function deleteUser(user) {
+            if (confirm(`Delete user ${user}?`)) {
+                fetch(`/admin/delete_user/${user}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        loadUsers();
+                    });
+            }
+        }
+
+        function deleteAllMessages() {
+            if (confirm('Delete all messages?')) {
+                fetch('/admin/delete_all_messages', { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        loadMessages();
+                    });
+            }
+        }
+
+        function deleteAllUsers() {
+            if (confirm('Delete all users except admin?')) {
+                fetch('/admin/delete_all_users', { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        loadUsers();
+                    });
+            }
+        }
+
+        function resetDatabase() {
+            if (confirm('RESET DATABASE? This will delete everything except admin user.')) {
+                fetch('/admin/reset_db', { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        loadUsers();
+                        loadMessages();
+                    });
+            }
+        }
+
+        function viewUserMessages(user) {
+            fetch(`/messages?username=admin&to=${user}`)
+                .then(res => res.json())
+                .then(messages => {
+                    const messagesList = document.getElementById('messages-list');
+                    messagesList.innerHTML = `<h3>Messages with ${user}:</h3>` + 
+                        messages.map(msg => `
+                            <div class="message-item">
+                                <strong>${msg.from}</strong>: ${msg.message}
+                                <br><small>${msg.timestamp}</small>
+                            </div>
+                        `).join('');
+                });
+        }
+
+        loadUsers();
+        loadMessages();
+    </script>
+</body>
+</html>
