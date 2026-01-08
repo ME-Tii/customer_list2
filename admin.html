@@ -107,16 +107,17 @@
         }
 
         function loadUsers() {
-            fetch('/users')
+            fetch('/admin/get_users')
                 .then(res => res.json())
                 .then(users => {
                     const usersList = document.getElementById('users-list');
                     usersList.innerHTML = users.map(user => `
                         <div class="user-item">
-                            <span>${user}</span>
+                            <span>${user.username} ${user.verified ? '' : '(PENDING)'}</span>
                             <div>
-                                <button onclick="viewUserMessages('${user}')">VIEW MESSAGES</button>
-                                ${user !== 'admin' ? `<button class="delete-btn" onclick="deleteUser('${user}')">DELETE</button>` : ''}
+                                <button onclick="viewUserMessages('${user.username}')">VIEW MESSAGES</button>
+                                ${!user.verified ? `<button onclick="verifyUser('${user.username}')">VERIFY</button>` : ''}
+                                ${user.username !== 'admin' ? `<button class="delete-btn" onclick="deleteUser('${user.username}')">DELETE</button>` : ''}
                             </div>
                         </div>
                     `).join('');
@@ -146,6 +147,15 @@
                         loadUsers();
                     });
             }
+        }
+
+        function verifyUser(user) {
+            fetch(`/admin/verify_user/${user}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    loadUsers();
+                });
         }
 
         function deleteAllMessages() {

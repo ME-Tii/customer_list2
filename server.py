@@ -12,9 +12,9 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?)', ('admin', 'password'))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -28,16 +28,16 @@ init_db()
 def get_user(username):
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('SELECT password FROM users WHERE username = ?', (username,))
+    c.execute('SELECT password, verified FROM users WHERE username = ?', (username,))
     result = c.fetchone()
     conn.close()
-    return result[0] if result else None
+    return result if result else None
 
 def add_user(username, password):
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     try:
-        c.execute('INSERT INTO users VALUES (?, ?)', (username, password))
+        c.execute('INSERT INTO users VALUES (?, ?, ?)', (username, password, 0))
         conn.commit()
         success = True
     except sqlite3.IntegrityError:
@@ -105,11 +105,15 @@ def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    stored_password = get_user(username)
-    if stored_password and stored_password == password:
-        return jsonify({'success': True, 'message': 'Login successful'})
-    else:
-        return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+    user_data = get_user(username)
+    if user_data:
+        stored_password, verified = user_data
+        if stored_password == password:
+            if verified:
+                return jsonify({'success': True, 'message': 'Login successful'})
+            else:
+                return jsonify({'success': False, 'message': 'Account pending admin verification'})
+    return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -124,7 +128,7 @@ def register():
     if get_user(username):
         return jsonify({'success': False, 'message': 'User already exists'})
     add_user(username, password)
-    return jsonify({'success': True, 'message': 'Registration successful'})
+    return jsonify({'success': True, 'message': 'Registration successful. Awaiting admin verification.'})
 
 @app.route('/admin.html')
 def admin_page():
@@ -170,6 +174,24 @@ def reset_db():
     conn.commit()
     conn.close()
     return jsonify({'message': 'Database reset successfully'})
+
+@app.route('/admin/get_users')
+def get_users_with_verification():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT username, verified FROM users')
+    users = [{'username': row[0], 'verified': bool(row[1])} for row in c.fetchall()]
+    conn.close()
+    return jsonify(users)
+
+@app.route('/admin/verify_user/<username>', methods=['POST'])
+def verify_user(username):
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('UPDATE users SET verified = 1 WHERE username = ?', (username,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'User {username} verified successfully'})
 
 @app.route('/settings.html')
 def settings_page():
@@ -244,4 +266,4 @@ def on_send_message(data):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    socketio.run(app, host='0.0.0.0', debug=False, allow_unsafe_werkzeug=False, port=port)
+    socketio.run(app, host='0.0.0.0', debug=False, allow_unsafe_werkzeug=True, port=port)
