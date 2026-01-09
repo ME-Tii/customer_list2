@@ -557,6 +557,7 @@
                 flex-direction: column;
                 gap: 5px;
                 z-index: 1002;
+                border: none;
             }
             
             #menu-options button {
@@ -774,7 +775,7 @@
         <button id="menu-button" style="position: fixed; top: 60px; right: 10px; z-index: 1003;">☰</button>
         <div id="menu-options" style="display: none; position: fixed; top: 115px; right: 10px; padding: 10px; background: var(--bg-color, #000); z-index: 2000;">
             <button class="settings-button" id="settings-button">SETTINGS</button>
-            <button id="users-button">USERS</button>
+            <button class="users-button" id="users-button">USERS</button>
             <button class="logout-button" id="logout-button">LOGOUT</button>
             <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
         </div>
@@ -1084,11 +1085,6 @@
         }
 
         document.getElementById('menu-button').addEventListener('click', () => {
-            const menu = document.getElementById('menu-options');
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        });
-
-        document.getElementById('menu-button').addEventListener('touchstart', () => {
             const menu = document.getElementById('menu-options');
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
         });
