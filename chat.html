@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         body {
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
             background-color: #000;
             color: #00ff00;
             margin: 0;
             padding: 0;
             height: 100vh;
             display: flex;
+            flex-direction: row;
             background-image: radial-gradient(circle, #111 0%, #000 100%);
         }
         .sidebar {
@@ -31,7 +34,7 @@
             background-color: #000;
             border: 1px solid #00ff00;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
         }
         .user-list {
             flex: 1;
@@ -54,73 +57,135 @@
             background-color: #111;
         }
         .main-chat {
-            flex: 1;
+            position: relative;
             display: flex;
             flex-direction: column;
-            padding: 10px;
+            padding: 5px 10px;
+            padding-bottom: 0;
+            border-right: 2px solid #00ff00;
+            overflow-x: hidden;
+            flex: 1;
+            height: calc(100vh - 50px);
         }
         .chat-title {
             font-size: 18px;
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        .messages {
+        .back-button {
+            margin-bottom: 5px;
+        }
+        body > .main-chat > .messages {
             flex: 1;
             border: 1px solid #00ff00;
-            padding: 10px;
+            border-bottom: none;
+            padding: 5px 10px 490px 10px;
             overflow-y: auto;
+            overflow-x: hidden;
             background-color: #000;
+            margin-bottom: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-height: 0;
+            box-sizing: border-box;
         }
         .message {
             margin-bottom: 10px;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
-            max-width: 100%;
+            max-width: 80%;
+            width: fit-content;
             box-sizing: border-box;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
+            border: 1px solid var(--accent-color, #00ff00);
+            border-radius: 10px;
+            padding: 10px;
+            position: relative;
         }
+
+
         .message strong {
             color: #33ff33;
         }
-
+        .message small {
+            font-size: 0.7em;
+        }
+        .status-message {
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            font-style: italic;
+            color: var(--accent-color, #00ff00);
+            text-align: center;
+        }
+        .input-area {
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #00ff00;
+            padding: 3px 10px;
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 10px;
+            background-color: #000;
+            height: 50px;
+            margin: 0;
+        }
         .input-area input[type="text"] {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             background-color: #000;
             border: 1px solid #00ff00;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             min-width: 0;
+            height: 35px;
         }
         .input-area input[type="file"] {
             margin-left: 10px;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
+            color: #000;
+            background-color: #00ff00;
+            border: 1px solid #00ff00;
+            font-family: 'Press Start 2P', monospace;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            height: 35px;
+        }
+        .input-area input[type="file"]:hover {
+            background-color: #33ff33;
         }
         .input-area button {
             background-color: #00ff00;
             color: #000;
             border: none;
-            padding: 8px 15px;
+            padding: 6px 12px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             font-weight: bold;
             text-transform: uppercase;
-            margin-left: 10px;
+            margin-left: 8px;
+            height: 35px;
         }
         .input-area button:hover {
             background-color: #33ff33;
         }
         .back-button {
             display: none;
-            margin-bottom: 10px;
+            position: absolute;
+            top: 60px;
+            right: 10px;
             background-color: #00ff00;
             color: #000;
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             text-transform: uppercase;
+            z-index: 10;
         }
         .user-info {
             position: absolute;
@@ -128,6 +193,7 @@
             right: 10px;
             font-size: 14px;
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
+            z-index: 10;
         }
         .online-count {
             position: absolute;
@@ -135,6 +201,7 @@
             right: 10px;
             font-size: 12px;
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
+            z-index: 10;
         }
         .logout-button {
             position: absolute;
@@ -145,9 +212,10 @@
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             font-size: 12px;
             text-transform: uppercase;
+            z-index: 10;
         }
         .logout-button:hover {
             background-color: #33ff33;
@@ -161,9 +229,10 @@
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             font-size: 12px;
             text-transform: uppercase;
+            z-index: 10;
         }
         .admin-button:hover {
             background-color: #ff6666;
@@ -177,9 +246,10 @@
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', monospace;
             font-size: 12px;
             text-transform: uppercase;
+            z-index: 10;
         }
         .settings-button:hover {
             background-color: #ffcc66;
@@ -260,9 +330,9 @@
                 border-right: none;
                 padding: 10px;
                 position: relative;
-                height: calc(100vh - 150px);
                 display: flex;
                 flex-direction: column;
+                flex: 1;
             }
             
             .user-info {
@@ -309,23 +379,39 @@
                 border-bottom: 1px solid var(--accent-color, #00ff00);
             }
             
-        .messages {
-            height: calc(100vh - 300px);
-            margin-bottom: 10px;
-            font-size: 16px;
-            line-height: 1.5;
-        }
+            .messages {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                font-size: 16px;
+                line-height: 1.5;
+                margin-bottom: 0;
+                padding: 10px;
+                border: 1px solid var(--accent-color, #00ff00);
+                border-radius: 8px;
+                min-height: 0;
+            }
             
             .message {
                 margin-bottom: 15px;
                 padding: 12px;
                 font-size: 16px;
                 border-radius: 8px;
-                background: var(--bg-color, #000);
+                background: var(--accent-color, #00ff00);
+                color: var(--bg-color, #000);
                 border: 1px solid var(--accent-color, #00ff00);
             }
             
-
+            .input-area {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 15px;
+                background: var(--bg-color, #000);
+                border-top: 2px solid var(--accent-color, #00ff00);
+                z-index: 100;
+            }
             
             .input-area input[type="text"] {
                 font-size: 16px;
@@ -397,8 +483,7 @@
             }
             
             .messages {
-                height: calc(100vh - 320px);
-                margin-bottom: 80px;
+                margin-bottom: 0;
                 font-size: 16px;
                 line-height: 1.5;
             }
@@ -409,30 +494,23 @@
                 font-size: 16px;
             }
             
-        .input-area {
-            display: flex;
-            margin-top: 10px;
-            align-items: center;
-        }
-            
-            .input-area input[type="text"] {
+            .message {
+                margin-bottom: 15px;
+                padding: 10px;
                 font-size: 16px;
-                padding: 12px;
-                margin-right: 10px;
-                flex: 1;
             }
             
-            .input-area input[type="file"] {
-                margin-right: 10px;
-                margin-bottom: 0;
+            .input-area {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 15px;
+                background: var(--bg-color, #000);
+                border-top: 2px solid var(--accent-color, #00ff00);
+                z-index: 100;
             }
-            
-            .input-area button {
-                padding: 12px 20px;
-                font-size: 16px;
-                font-weight: bold;
-                margin: 0;
-            }
+
             
             /* Touch-friendly spacing */
             .user, button, input {
@@ -463,11 +541,11 @@
             }
             
             .main-chat {
-                height: calc(100vh - 120px);
+                flex: 1;
             }
             
             .messages {
-                margin-bottom: 80px;
+                margin-bottom: 0;
                 padding: 8px;
             }
             
@@ -634,6 +712,9 @@
                 onlineUsers.push(user);
                 updateUserLists();
                 updateOnlineCount();
+                if (currentChat === 'public') {
+                    addMessage(user + ' has joined the chat.');
+                }
             }
         });
 
@@ -641,17 +722,20 @@
             onlineUsers = onlineUsers.filter(u => u !== user);
             updateUserLists();
             updateOnlineCount();
+            if (currentChat === 'public') {
+                addMessage(user + ' has left the chat.');
+            }
         });
 
         socket.on('public_message', (data) => {
             if (currentChat === 'public') {
-                addMessage(`${data.from}: ${data.message}`);
+                addMessage(data.from + ' <small>[' + new Date(data.timestamp || Date.now()).toLocaleTimeString() + ']</small>: ' + data.message);
             }
         });
 
         socket.on('private_message', (data) => {
             if (currentChat === data.from || currentChat === data.to) {
-                addMessage(`${data.from}: ${data.message}`);
+                addMessage(data.from + ' <small>[' + new Date(data.timestamp || Date.now()).toLocaleTimeString() + ']</small>: ' + data.message);
             }
         });
 
@@ -691,25 +775,37 @@
             loadMessages();
         }
 
-        function addMessage(msg) {
-            const div = document.createElement('div');
-            div.className = 'message';
-            if (msg.includes('/uploads/')) {
-                const parts = msg.split(' ');
-                const urlIndex = parts.findIndex(p => p.startsWith('/uploads/'));
-                const url = parts[urlIndex];
-                const filename = url.split('/').pop();
-                const ext = filename.split('.').pop().toLowerCase();
-                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-                    div.innerHTML = msg.replace(url, `<img src="${url}" style="max-width: 200px; max-height: 200px;">`);
-                } else {
-                    div.innerHTML = msg.replace(url, `<a href="${url}" download="${filename}" class="file-link" style="color: var(--accent-color, #00ff00);">${filename}</a>`);
-                }
+        function addMessage(msg, setScroll) {
+            if (typeof setScroll === 'undefined') setScroll = true;
+            var div = document.createElement('div');
+            if (msg.indexOf('has joined') !== -1 || msg.indexOf('has left') !== -1) {
+                div.className = 'status-message';
             } else {
-                div.innerHTML = msg;
+                div.className = 'message';
             }
+            var processedMsg = msg;
+            var parts = msg.split(' ');
+            for (var urlIndex = 0; urlIndex < parts.length; urlIndex++) {
+                var url = parts[urlIndex];
+                if (url.match(/^https?:\/\//)) {
+                    var filename = url.split('/').pop();
+                    var ext = filename.split('.').pop().toLowerCase();
+                    var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
+                    if (imgTags.includes(ext)) {
+                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'>");
+                    } else {
+                        processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link' style='color: #00ff00;'>" + filename + "</a>");
+                    }
+                }
+            }
+            div.innerHTML = processedMsg;
             document.getElementById('messages').appendChild(div);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            if (setScroll) {
+                const messagesEl = document.getElementById('messages');
+                const style = window.getComputedStyle(messagesEl);
+                const paddingBottom = parseInt(style.paddingBottom) || 0;
+                messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - paddingBottom;
+            }
         }
 
         document.getElementById('search').addEventListener('input', updateUserLists);
@@ -759,15 +855,25 @@
             fetch('/messages?' + params)
                 .then(res => res.json())
                 .then(msgs => {
-                    msgs.forEach(msg => {
-                        addMessage(`${msg.from}: ${msg.message}`);
-                    });
-                });
+                     msgs.forEach(msg => {
+                         let displayMsg;
+                         if (msg.from === 'System' && (msg.message.includes('has joined') || msg.message.includes('has left'))) {
+                             displayMsg = msg.message;
+                         } else {
+                             displayMsg = msg.from + ' <small>[' + new Date(msg.timestamp).toLocaleTimeString() + ']</small>: ' + msg.message;
+                         }
+                         addMessage(displayMsg, false);
+                     });
+                     const messagesEl = document.getElementById('messages');
+                     const style = window.getComputedStyle(messagesEl);
+                     const paddingBottom = parseInt(style.paddingBottom) || 0;
+                     messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - paddingBottom;
+                 });
         }
 
         document.getElementById('logout-button').addEventListener('click', () => {
             socket.emit('leave', { username });
-            window.location.href = '/';
+            setTimeout(() => window.location.href = '/', 100);
         });
 
         document.getElementById('admin-button').addEventListener('click', () => {

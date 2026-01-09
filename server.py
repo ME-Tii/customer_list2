@@ -56,6 +56,10 @@ def add_user(username, password):
 def index():
     return send_from_directory('.', 'login.html')
 
+@app.route('/login.html')
+def login_page():
+    return send_from_directory('.', 'login.html')
+
 @app.route('/register.html')
 def register_page():
     return send_from_directory('.', 'register.html')
@@ -284,6 +288,12 @@ def on_join(data):
     username = data['username']
     online_users.add(username)
     join_room(username)
+    # Save join message to db
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('System', None, f'{username} has joined the chat.'))
+    conn.commit()
+    conn.close()
     emit('user_online', username, broadcast=True, include_self=False)
     emit('online_users', list(online_users))
 
@@ -291,7 +301,14 @@ def on_join(data):
 def on_leave(data):
     username = data['username']
     online_users.discard(username)
+    # Save leave message to db
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('System', None, f'{username} has left the chat.'))
+    conn.commit()
+    conn.close()
     emit('user_offline', username, broadcast=True, include_self=False)
+    emit('online_users', list(online_users))
 
 @socketio.on('send_message')
 def on_send_message(data):
