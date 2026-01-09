@@ -86,6 +86,16 @@
             border-radius: 5px;
             margin-bottom: 5px;
             text-align: center;
+            position: relative;
+        }
+        .unread-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
         }
         .user:hover {
             background-color: #111;
@@ -784,6 +794,7 @@
         let currentChat = 'public'; // 'public' or username for private
         let allUsers = [];
         let onlineUsers = [];
+        let unreadPrivate = new Set();
 
         document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
         
@@ -910,6 +921,9 @@
         socket.on('private_message', (data) => {
             if (currentChat === data.from || currentChat === data.to) {
                 addMessage(data.from + ' <small>[' + new Date(data.timestamp || Date.now()).toLocaleTimeString() + ']</small>: ' + data.message);
+            } else {
+                unreadPrivate.add(data.from);
+                updateUserLists();
             }
         });
 
@@ -918,8 +932,8 @@
             const onlineFiltered = onlineUsers.filter(u => u.toLowerCase().includes(search) && u !== username);
             const offlineFiltered = allUsers.filter(u => !onlineUsers.includes(u) && u !== username && u.toLowerCase().includes(search));
 
-            document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
-            document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}</div>`).join('');
+            document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`).join('');
+            document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`).join('');
             
             // Reapply theme to newly created user list elements
             const savedTheme = localStorage.getItem(`theme_${username}`);
@@ -938,6 +952,8 @@
             document.getElementById('chat-title').textContent = `PRIVATE WITH ${user.toUpperCase()}`;
             document.getElementById('back-button').style.display = 'block';
             document.getElementById('messages').innerHTML = '';
+            unreadPrivate.delete(user);
+            updateUserLists();
             loadMessages();
         }
 
