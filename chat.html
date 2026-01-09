@@ -941,8 +941,8 @@
 
         function updateUserLists() {
             const search = document.getElementById('search').value.toLowerCase();
-            const onlineFiltered = onlineUsers.filter(u => u.toLowerCase().includes(search) && u !== username);
-            const offlineFiltered = allUsers.filter(u => !onlineUsers.includes(u) && u !== username && u.toLowerCase().includes(search));
+            const onlineFiltered = onlineUsers.filter(u => u.toLowerCase().includes(search) && u !== username && !programUsers.includes(u));
+            const offlineFiltered = allUsers.filter(u => !onlineUsers.includes(u) && u !== username && u.toLowerCase().includes(search) && !programUsers.includes(u));
 
             document.getElementById('online-users').innerHTML = onlineFiltered.map(u => {
                 console.log('User', u, 'unread', unreadPrivate.has(u));
