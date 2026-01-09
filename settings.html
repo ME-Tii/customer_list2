@@ -477,39 +477,8 @@
             root.style.setProperty('--bg-color', theme.bgColor || '#000000');
             root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
             root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
-            document.body.style.fontFamily = theme.fontFamily || "'Courier New', monospace";
-            
-            // Update all elements
-            const elementsToUpdate = [
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'color', value: theme.textColor || '#00ff00' },
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'borderColor', value: theme.accentColor || '#00ff00' },
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'backgroundColor', value: theme.bgColor || '#000000' },
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'fontFamily', value: theme.fontFamily || "'Courier New', monospace" },
-                { selector: 'select', property: 'color', value: theme.textColor || '#00ff00' },
-                { selector: 'select', property: 'borderColor', value: theme.accentColor || '#00ff00' },
-                { selector: 'select', property: 'backgroundColor', value: theme.bgColor || '#000000' },
-                { selector: 'select', property: 'fontFamily', value: theme.fontFamily || "'Courier New', monospace" },
-                { selector: 'button', property: 'backgroundColor', value: theme.accentColor || '#00ff00' },
-                { selector: 'button', property: 'color', value: theme.bgColor || '#000000' },
-                { selector: '.section', property: 'borderColor', value: theme.accentColor || '#00ff00' },
-                { selector: '.theme-preview', property: 'borderColor', value: theme.accentColor || '#00ff00' },
-                { selector: '.back-btn', property: 'backgroundColor', value: theme.accentColor || '#00ff00' },
-                { selector: '.back-btn', property: 'color', value: theme.bgColor || '#000000' }
-            ];
-            
-            elementsToUpdate.forEach(({ selector, property, value }) => {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(el => el.style[property] = value);
-            });
-            
-            // Update text shadows
             document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor || '#00ff00'}`;
             document.querySelector('h1').style.color = theme.textColor || '#00ff00';
-            // Apply font to all elements
-            const allElements = document.querySelectorAll('*');
-            allElements.forEach(el => {
-                el.style.fontFamily = theme.fontFamily || "'Courier New', monospace";
-            });
         }
 
         function resetTheme() {
