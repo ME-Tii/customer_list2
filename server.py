@@ -23,6 +23,7 @@ def init_db():
     
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, read INTEGER DEFAULT 0)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS big5_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
     
     # Check if read column exists in messages table
     c.execute('''PRAGMA table_info(messages)''')
@@ -382,13 +383,77 @@ def on_send_message(data):
             "Keep coding!"
         ]
 
+        # Big 5 questions
+        big5_questions = [
+            {"text": "I am the life of the party.", "trait": "E", "reverse": False},
+            {"text": "I feel little concern for others.", "trait": "A", "reverse": True},
+            {"text": "I am always prepared.", "trait": "C", "reverse": False},
+            {"text": "I get stressed out easily.", "trait": "N", "reverse": False},
+            {"text": "I have a rich vocabulary.", "trait": "O", "reverse": False},
+            {"text": "I don't talk a lot.", "trait": "E", "reverse": True},
+            {"text": "I am interested in people.", "trait": "A", "reverse": False},
+            {"text": "I leave my belongings around.", "trait": "C", "reverse": True},
+            {"text": "I am relaxed most of the time.", "trait": "N", "reverse": True},
+            {"text": "I have difficulty understanding abstract ideas.", "trait": "O", "reverse": True},
+        ]
+
         # Check if messaging a pre-programmed chat
         if to_user == 'grok':
             ai_msg = random.choice(general_responses)
         elif to_user == 'big_5':
-            ai_msg = random.choice(programms_responses)
+            # Handle Big 5 test
+            conn2 = sqlite3.connect('users.db')
+            c2 = conn2.cursor()
+            c2.execute('SELECT step, scores FROM big5_sessions WHERE username = ?', (username,))
+            row = c2.fetchone()
+            if row:
+                step, scores_str = row
+                scores = eval(scores_str)  # Simple dict
+            else:
+                step = 0
+                scores = {}
+                c2.execute('INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
+
+            if step == 0:
+                if message.lower() == 's':
+                    ai_msg = f"Question 1: {big5_questions[0]['text']}\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                    step = 1
+                else:
+                    ai_msg = "This is the Big 5 personality test. Start by writing 's'."
+            elif 1 <= step <= len(big5_questions):
+                try:
+                    rating = int(message.strip())
+                    if 1 <= rating <= 5:
+                        q = big5_questions[step - 1]
+                        trait = q['trait']
+                        score = rating if not q['reverse'] else 6 - rating
+                        if trait not in scores:
+                            scores[trait] = []
+                        scores[trait].append(score)
+                        if step < len(big5_questions):
+                            ai_msg = f"Question {step + 1}: {big5_questions[step]['text']}\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                            step += 1
+                        else:
+                            # Calculate results
+                            results = {}
+                            for t in ['E', 'A', 'C', 'N', 'O']:
+                                avg = sum(scores.get(t, [3])) / len(scores.get(t, [3]))
+                                results[t] = "High" if avg > 3 else "Low"
+                            ai_msg = f"Test complete!\nExtraversion: {results['E']}\nAgreeableness: {results['A']}\nConscientiousness: {results['C']}\nNeuroticism: {results['N']}\nOpenness: {results['O']}"
+                            step = -1  # Completed
+                    else:
+                        ai_msg = f"Invalid. Question {step}: {big5_questions[step - 1]['text']}\nReply with 1-5."
+                except ValueError:
+                    ai_msg = f"Invalid. Question {step}: {big5_questions[step - 1]['text']}\nReply with 1-5."
+            else:
+                ai_msg = "Test already completed. Start a new one by saying 's'." if step == -1 else "Unknown state."
+
+            # Update session
+            c2.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
+            conn2.commit()
+            conn2.close()
         elif to_user == 'claude':
-            ai_msg = random.choice(general_responses)  # Placeholder, can customize later
+            ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'gemini':
             ai_msg = random.choice(general_responses)  # Placeholder
         else:
