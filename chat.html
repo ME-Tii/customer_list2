@@ -439,38 +439,20 @@
                 margin-right: 10px;
                 padding: 5px;
                 min-height: 25px;
-                background-image: url('icons/upload.png');
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                background-color: transparent;
-                border: none;
-                cursor: pointer;
+                font-size: 16px;
             }
             
             .input-area #send-button {
                 width: 40px;
                 padding: 5px;
                 min-height: 25px;
-                background-image: url('icons/send.png');
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                background-color: transparent;
-                border: none;
-                cursor: pointer;
+                font-size: 16px;
             }
             
             #menu-button {
                 width: 40px;
                 height: 40px;
-                background-image: url('icons/menu-offnen.png');
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                background-color: transparent;
-                border: none;
-                cursor: pointer;
+                font-size: 16px;
             }
             
             .input-area button {
@@ -638,7 +620,7 @@
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
-        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;"></button>
+        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;">☰</button>
         <div id="menu-options" style="display: none; position: fixed; top: 80px; right: 10px;">
             <button class="logout-button" id="logout-button">LOGOUT</button>
             <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
@@ -650,8 +632,8 @@
         <div class="input-area">
             <input type="text" id="message-input" placeholder="ENTER MESSAGE">
             <input type="file" id="file-input" style="display: none;">
-            <button id="file-button"></button>
-            <button id="send-button"></button>
+            <button id="file-button">📎</button>
+            <button id="send-button">➤</button>
         </div>
     </div>
     <script>
