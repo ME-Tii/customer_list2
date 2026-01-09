@@ -409,17 +409,22 @@
                 border-radius: 8px;
             }
             
-            .message {
-                font-family: 'Press Start 2P', monospace;
-                text-shadow: 0 0 5px var(--bg-color, #000);
-                margin-bottom: 15px;
-                padding: 12px;
-                font-size: 16px;
-                border-radius: 8px;
-                background: var(--accent-color, #00ff00);
-                color: var(--bg-color, #000);
-                border: 1px solid var(--accent-color, #00ff00);
-            }
+        .message {
+            font-family: 'Press Start 2P', monospace;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            max-width: 80%;
+            width: fit-content;
+            box-sizing: border-box;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
+            border: 1px solid var(--accent-color, #00ff00);
+            border-radius: 10px;
+            padding: 10px;
+            position: relative;
+        }
             
             .file-link {
                 color: black;
@@ -870,7 +875,10 @@
 
         document.getElementById('back-button').addEventListener('click', switchToPublic);
 
+        let sending = false;
         document.getElementById('send-button').addEventListener('click', async () => {
+            if (sending) return;
+            sending = true;
             const msg = document.getElementById('message-input').value.trim();
             const fileInput = document.getElementById('file-input');
             let message = msg;
@@ -888,6 +896,7 @@
                     }
                 } catch (error) {
                     alert('Upload failed: ' + error.message);
+                    sending = false;
                     return;
                 }
                 fileInput.value = '';
@@ -897,6 +906,7 @@
                 addMessage(username + ' <small>[' + new Date().toLocaleTimeString() + ']</small>: ' + message);
                 document.getElementById('message-input').value = '';
             }
+            setTimeout(() => sending = false, 1000);
         });
 
         document.getElementById('message-input').addEventListener('keypress', (e) => {
