@@ -854,8 +854,11 @@
                     var filename = url.split('/').pop();
                     var ext = filename.split('.').pop().toLowerCase();
                     var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
+                    var videoTags = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
                     if (imgTags.includes(ext)) {
                         processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
+                    } else if (videoTags.includes(ext)) {
+                        processedMsg = processedMsg.replace(url, "<video src='" + url + "' style='max-width: 200px; max-height: 200px;' controls></video><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
                     } else {
                         processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link'>" + filename + "</a>");
                     }
