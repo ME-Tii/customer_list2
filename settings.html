@@ -407,9 +407,7 @@
         document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
         document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
         applyTheme(theme);
-            updatePreviews();
-            applyTheme(theme);
-        }
+        updatePreviews();
 
         function updatePreviews() {
             document.getElementById('text-preview').style.backgroundColor = document.getElementById('text-color').value;
