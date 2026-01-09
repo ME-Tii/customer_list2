@@ -32,8 +32,6 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
-    # Clear all messages for fresh start
-    c.execute('DELETE FROM messages')
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
