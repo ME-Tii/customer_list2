@@ -919,9 +919,11 @@
         });
 
         socket.on('private_message', (data) => {
+            console.log('Private message from', data.from, 'to', data.to, 'currentChat', currentChat);
             if (currentChat === data.from || currentChat === data.to) {
                 addMessage(data.from + ' <small>[' + new Date(data.timestamp || Date.now()).toLocaleTimeString() + ']</small>: ' + data.message);
             } else {
+                console.log('Adding unread for', data.from);
                 unreadPrivate.add(data.from);
                 updateUserLists();
             }
@@ -932,8 +934,14 @@
             const onlineFiltered = onlineUsers.filter(u => u.toLowerCase().includes(search) && u !== username);
             const offlineFiltered = allUsers.filter(u => !onlineUsers.includes(u) && u !== username && u.toLowerCase().includes(search));
 
-            document.getElementById('online-users').innerHTML = onlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`).join('');
-            document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`).join('');
+            document.getElementById('online-users').innerHTML = onlineFiltered.map(u => {
+                console.log('User', u, 'unread', unreadPrivate.has(u));
+                return `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`;
+            }).join('');
+            document.getElementById('offline-users').innerHTML = offlineFiltered.map(u => {
+                console.log('User', u, 'unread', unreadPrivate.has(u));
+                return `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`;
+            }).join('');
             
             // Reapply theme to newly created user list elements
             const savedTheme = localStorage.getItem(`theme_${username}`);
