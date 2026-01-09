@@ -806,6 +806,7 @@
         
         // Load and apply theme
         function applyTheme(theme) {
+            console.log('Applying theme:', theme);
             const root = document.documentElement;
             root.style.setProperty('--text-color', theme.textColor);
             root.style.setProperty('--bg-color', theme.bgColor);
