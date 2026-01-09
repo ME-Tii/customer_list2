@@ -477,8 +477,6 @@
             root.style.setProperty('--bg-color', theme.bgColor || '#000000');
             root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
             root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
-            document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor || '#00ff00'}`;
-            document.querySelector('h1').style.color = theme.textColor || '#00ff00';
         }
 
         function resetTheme() {
@@ -487,7 +485,11 @@
             document.getElementById('bg-color').value = '#000000';
             document.getElementById('accent-color').value = '#00ff00';
             document.getElementById('font-select').value = "'Courier New', monospace";
-            applyTheme({});
+            const root = document.documentElement;
+            root.style.setProperty('--text-color', '#00ff00');
+            root.style.setProperty('--bg-color', '#000000');
+            root.style.setProperty('--accent-color', '#00ff00');
+            root.style.setProperty('--font-family', "'Courier New', monospace");
             alert('Theme reset to default');
         }
 
