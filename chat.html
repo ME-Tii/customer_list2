@@ -120,6 +120,10 @@
         .message small {
             font-size: 0.7em;
         }
+        .file-link {
+            color: white;
+            font-weight: bold;
+        }
         .status-message {
             background: none;
             border: none;
@@ -403,6 +407,7 @@
             
             .message {
                 font-family: 'Press Start 2P', monospace;
+                text-shadow: 0 0 5px var(--bg-color, #000);
                 margin-bottom: 15px;
                 padding: 12px;
                 font-size: 16px;
@@ -410,6 +415,11 @@
                 background: var(--accent-color, #00ff00);
                 color: var(--bg-color, #000);
                 border: 1px solid var(--accent-color, #00ff00);
+            }
+            
+            .file-link {
+                color: white;
+                font-weight: bold;
             }
             
             .input-area {
@@ -832,9 +842,9 @@
                     var ext = filename.split('.').pop().toLowerCase();
                     var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
                     if (imgTags.includes(ext)) {
-                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link' style='color: #00ff00;'>Download " + filename + "</a>");
+                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
                     } else {
-                        processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link' style='color: #00ff00;'>" + filename + "</a>");
+                        processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link'>" + filename + "</a>");
                     }
                 }
             }
