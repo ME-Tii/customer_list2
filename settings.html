@@ -41,6 +41,14 @@
             width: 50px;
             height: 30px;
         }
+        select {
+            width: 100%;
+            padding: 8px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
         button {
             background-color: #00ff00;
             color: #000;
@@ -365,6 +373,16 @@
             <input type="color" id="accent-color" value="#00ff00">
             <span class="theme-preview" id="accent-preview" style="background-color: #00ff00;"></span>
         </div>
+        <div class="form-group">
+            <label for="font-select">Font Family</label>
+            <select id="font-select">
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="'Press Start 2P', cursive">Press Start 2P</option>
+            </select>
+        </div>
         <button onclick="saveTheme()">SAVE THEME</button>
         <button onclick="resetTheme()">RESET THEME</button>
     </div>
@@ -387,6 +405,7 @@
             document.getElementById('text-color').value = theme.textColor || '#00ff00';
             document.getElementById('bg-color').value = theme.bgColor || '#000000';
             document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
+            document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
             updatePreviews();
             applyTheme(theme);
         }
@@ -436,7 +455,8 @@
             const theme = {
                 textColor: document.getElementById('text-color').value,
                 bgColor: document.getElementById('bg-color').value,
-                accentColor: document.getElementById('accent-color').value
+                accentColor: document.getElementById('accent-color').value,
+                fontFamily: document.getElementById('font-select').value
             };
             localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
             
@@ -448,6 +468,7 @@
         function applyTheme(theme) {
             document.body.style.backgroundColor = theme.bgColor;
             document.body.style.color = theme.textColor;
+            document.body.style.fontFamily = theme.fontFamily || "'Courier New', monospace";
             
             // Update all elements
             const elementsToUpdate = [
@@ -469,6 +490,11 @@
             
             // Update text shadows
             document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor}`;
+            // Apply font to all elements
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(el => {
+                el.style.fontFamily = theme.fontFamily || "'Courier New', monospace";
+            });
         }
 
         function resetTheme() {
