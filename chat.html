@@ -876,6 +876,7 @@
             }
             if (message) {
                 socket.emit('send_message', { username, message, to: currentChat === 'public' ? null : currentChat });
+                addMessage(username + ' <small>[' + new Date().toLocaleTimeString() + ']</small>: ' + message);
                 document.getElementById('message-input').value = '';
             }
         });
