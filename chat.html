@@ -24,9 +24,9 @@
                 flex-direction: column;
                 font-size: 16px;
                 min-height: 100vh;
-                overflow: hidden;
+                overflow: auto;
                 display: flex;
-                padding-bottom: 80px;
+                padding-bottom: 40px;
             }
             }
         .sidebar {
@@ -426,32 +426,32 @@
             
             .input-area input[type="text"] {
                 font-size: 16px;
-                padding: 18px;
+                padding: 9px;
                 margin-right: 10px;
                 flex: 1;
                 color: var(--text-color, #00ff00);
                 border-color: var(--accent-color, #00ff00);
                 background-color: var(--bg-color, #000);
                 border-radius: 8px;
-                min-height: 50px;
+                min-height: 25px;
             }
             
             .input-area input[type="file"] {
                 width: 50px;
                 margin-right: 10px;
                 margin-bottom: 0;
-                padding: 10px;
-                min-height: 50px;
+                padding: 5px;
+                min-height: 25px;
                 overflow: hidden;
             }
             
             .input-area button {
-                padding: 18px 25px;
+                padding: 9px 12px;
                 font-size: 16px;
                 font-weight: bold;
                 margin: 0;
-                min-height: 50px;
-                min-width: 100px;
+                min-height: 25px;
+                min-width: 50px;
                 border-radius: 8px;
             }
             
@@ -587,10 +587,8 @@
 </head>
 <body>
     <div class="sidebar">
-        <div class="search-bar">
-            <input type="text" id="search" placeholder="SEARCH USERS">
-        </div>
         <div class="user-list">
+            <input type="text" id="search" placeholder="SEARCH USERS">
             <div class="user-section">
                 <h3>ONLINE</h3>
                 <div id="online-users"></div>
@@ -604,9 +602,12 @@
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
-        <button class="logout-button" id="logout-button">LOGOUT</button>
-        <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
-        <button class="settings-button" id="settings-button">SETTINGS</button>
+        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;">MENU</button>
+        <div id="menu-options" style="display: none; position: fixed; top: 80px; right: 10px;">
+            <button class="logout-button" id="logout-button">LOGOUT</button>
+            <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
+            <button class="settings-button" id="settings-button">SETTINGS</button>
+        </div>
         <h2 class="chat-title" id="chat-title">PUBLIC CHAT</h2>
         <button class="back-button" id="back-button">BACK TO PUBLIC</button>
         <div class="messages" id="messages"></div>
@@ -883,6 +884,11 @@
                      messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - paddingBottom;
                  });
         }
+
+        document.getElementById('menu-button').addEventListener('click', () => {
+            const menu = document.getElementById('menu-options');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
 
         document.getElementById('logout-button').addEventListener('click', () => {
             socket.emit('leave', { username });
