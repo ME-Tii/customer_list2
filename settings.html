@@ -453,12 +453,14 @@
         }
 
         function saveTheme() {
+            console.log('Save button clicked');
             const theme = {
                 textColor: document.getElementById('text-color').value,
                 bgColor: document.getElementById('bg-color').value,
                 accentColor: document.getElementById('accent-color').value,
                 fontFamily: document.getElementById('font-select').value
             };
+            console.log('Theme to save:', theme);
             localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
             // Apply theme to current page immediately
             applyTheme(theme);
