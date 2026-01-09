@@ -883,6 +883,11 @@
             .then(res => res.json())
             .then(users => {
                 allUsers = users;
+                return fetch('/unread?username=' + username);
+            })
+            .then(res => res.json())
+            .then(unread => {
+                unread.forEach(u => unreadPrivate.add(u));
                 updateUserLists();
             });
 

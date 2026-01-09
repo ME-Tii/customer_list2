@@ -244,6 +244,16 @@ def verify_user(username):
     conn.close()
     return jsonify({'message': f'User {username} verified successfully'})
 
+@app.route('/unread')
+def get_unread():
+    username = request.args.get('username')
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT DISTINCT from_user FROM messages WHERE to_user = ?', (username,))
+    unread = [row[0] for row in c.fetchall()]
+    conn.close()
+    return jsonify(unread)
+
 @app.route('/settings.html')
 def settings_page():
     return send_from_directory('.', 'settings.html')
