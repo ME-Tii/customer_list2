@@ -33,7 +33,7 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('claude', 'claude', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('grok', 'grok', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -352,46 +352,46 @@ def on_send_message(data):
         # Private message
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
-        # Check if messaging Claude
-        if to_user == 'claude':
-            print(f"Messaging Claude from {username}: {message}")
-            api_key = os.environ.get('ANTHROPIC_API_KEY')
+        # Check if messaging Grok
+        if to_user == 'grok':
+            print(f"Messaging Grok from {username}: {message}")
+            api_key = os.environ.get('GROK_API_KEY')
             if not api_key:
-                print("No ANTHROPIC_API_KEY set")
+                print("No GROK_API_KEY set")
                 return
             try:
-                url = 'https://api.anthropic.com/v1/messages'
+                url = 'https://api.x.ai/v1/chat/completions'
                 headers = {
-                    'x-api-key': api_key,
-                    'anthropic-version': '2023-06-01',
+                    'Authorization': f'Bearer {api_key}',
                     'Content-Type': 'application/json'
                 }
                 data = {
-                    'model': 'claude-3-5-sonnet-20241022',
-                    'max_tokens': 1024,
-                    'messages': [{'role': 'user', 'content': message}]
+                    'model': 'grok-beta',
+                    'messages': [{'role': 'user', 'content': message}],
+                    'stream': False,
+                    'temperature': 0
                 }
-                print(f"Calling Claude API")
+                print(f"Calling Grok API")
                 resp = requests.post(url, headers=headers, json=data)
-                print(f"Claude API response status: {resp.status_code}")
+                print(f"Grok API response status: {resp.status_code}")
                 if resp.status_code == 200:
                     data = resp.json()
-                    print(f"Claude response data: {data}")
-                    ai_msg = data['content'][0]['text']
-                    print(f"Claude AI message: {ai_msg}")
+                    print(f"Grok response data: {data}")
+                    ai_msg = data['choices'][0]['message']['content']
+                    print(f"Grok AI message: {ai_msg}")
                     # Store AI response
                     conn = sqlite3.connect('users.db')
                     c = conn.cursor()
-                    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('claude', username, ai_msg))
+                    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('grok', username, ai_msg))
                     conn.commit()
                     conn.close()
                     # Emit AI response
-                    emit('private_message', {'from': 'claude', 'message': ai_msg, 'to': username}, to=username)
-                    print("Claude response emitted")
+                    emit('private_message', {'from': 'grok', 'message': ai_msg, 'to': username}, to=username)
+                    print("Grok response emitted")
                 else:
-                    print(f"Claude API error response: {resp.text}")
+                    print(f"Grok API error response: {resp.text}")
             except Exception as e:
-                print(f"Claude API exception: {e}")
+                print(f"Grok API exception: {e}")
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
