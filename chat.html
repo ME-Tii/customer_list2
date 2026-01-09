@@ -866,7 +866,7 @@
                     });
                     const data = await response.json();
                     if (data.url) {
-                        message += (msg ? ' ' : '') + 'File: ' + data.url;
+                        message += (msg ? ' ' : '') + data.url;
                     }
                 } catch (error) {
                     alert('Upload failed: ' + error.message);
