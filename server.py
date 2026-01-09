@@ -100,6 +100,10 @@ def upload_file():
 def serve_upload(filename):
     return send_from_directory('uploads', filename)
 
+@app.route('/icons/<path:filename>')
+def serve_icons(filename):
+    return send_from_directory('icons', filename)
+
 
 @app.route('/test_route')
 def test_route():
