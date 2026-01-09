@@ -21,7 +21,13 @@ def init_db():
         c.execute('DROP TABLE users')
     
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, read INTEGER DEFAULT 0)''')
+    
+    # Check if read column exists in messages table
+    c.execute('''PRAGMA table_info(messages)''')
+    columns = [row[1] for row in c.fetchall()]
+    if 'read' not in columns:
+        c.execute('''ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0''')
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
     conn.commit()
     conn.close()
@@ -145,6 +151,8 @@ def get_messages():
     elif to_user:
         c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp', (username, to_user, to_user, username))
         messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
+        # Mark messages as read
+        c.execute('UPDATE messages SET read = 1 WHERE from_user = ? AND to_user = ? AND read = 0', (to_user, username))
     else:
         c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
         messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
@@ -249,7 +257,7 @@ def get_unread():
     username = request.args.get('username')
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('SELECT DISTINCT from_user FROM messages WHERE to_user = ?', (username,))
+    c.execute('SELECT DISTINCT from_user FROM messages WHERE to_user = ? AND read = 0', (username,))
     unread = [row[0] for row in c.fetchall()]
     conn.close()
     return jsonify(unread)
