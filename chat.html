@@ -829,6 +829,8 @@
                 { selector: '.messages', property: 'borderColor', value: theme.accentColor },
                 { selector: '.input-area', property: 'borderColor', value: theme.accentColor },
                 { selector: '.user-info', property: 'color', value: theme.textColor },
+                { selector: '.user', property: 'fontFamily', value: theme.fontFamily || "'Courier New', monospace" },
+                { selector: '.message', property: 'fontFamily', value: theme.fontFamily || "'Press Start 2P', monospace" },
                 { selector: '.message', property: 'fontFamily', value: theme.fontFamily || "'Press Start 2P', monospace" },
                 { selector: '.online-count', property: 'color', value: theme.textColor },
                 { selector: '.chat-title', property: 'color', value: theme.textColor },
@@ -966,6 +968,11 @@
             if (savedTheme) {
                 const theme = JSON.parse(savedTheme);
                 applyTheme(theme);
+                // Also apply to existing messages
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(msg => {
+                    msg.style.fontFamily = theme.fontFamily || "'Press Start 2P', monospace";
+                });
             }
         }
         
