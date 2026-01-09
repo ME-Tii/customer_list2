@@ -396,7 +396,48 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username');
-        
+
+        function updatePreviews() {
+            document.getElementById('text-preview').style.backgroundColor = document.getElementById('text-color').value;
+            document.getElementById('bg-preview').style.backgroundColor = document.getElementById('bg-color').value;
+            document.getElementById('accent-preview').style.backgroundColor = document.getElementById('accent-color').value;
+        }
+
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            root.style.setProperty('--text-color', theme.textColor || '#00ff00');
+            root.style.setProperty('--bg-color', theme.bgColor || '#000000');
+            root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
+            root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
+        }
+
+        function saveTheme() {
+            const theme = {
+                textColor: document.getElementById('text-color').value,
+                bgColor: document.getElementById('bg-color').value,
+                accentColor: document.getElementById('accent-color').value,
+                fontFamily: document.getElementById('font-select').value
+            };
+            localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
+            // Apply theme to current page immediately
+            applyTheme(theme);
+            alert('Theme saved and applied!');
+        }
+
+        function resetTheme() {
+            localStorage.removeItem(`theme_${username}`);
+            document.getElementById('text-color').value = '#00ff00';
+            document.getElementById('bg-color').value = '#000000';
+            document.getElementById('accent-color').value = '#00ff00';
+            document.getElementById('font-select').value = "'Courier New', monospace";
+            const root = document.documentElement;
+            root.style.setProperty('--text-color', '#00ff00');
+            root.style.setProperty('--bg-color', '#000000');
+            root.style.setProperty('--accent-color', '#00ff00');
+            root.style.setProperty('--font-family', "'Courier New', monospace");
+            alert('Theme reset to default');
+        }
+
         document.getElementById('back-btn').href = `chat.html?username=${username}`;
 
         // Load and apply saved theme
@@ -408,12 +449,6 @@
         document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
         applyTheme(theme);
         updatePreviews();
-
-        function updatePreviews() {
-            document.getElementById('text-preview').style.backgroundColor = document.getElementById('text-color').value;
-            document.getElementById('bg-preview').style.backgroundColor = document.getElementById('bg-color').value;
-            document.getElementById('accent-preview').style.backgroundColor = document.getElementById('accent-color').value;
-        }
 
         document.getElementById('text-color').addEventListener('input', updatePreviews);
         document.getElementById('bg-color').addEventListener('input', updatePreviews);
@@ -458,12 +493,6 @@
                 fontFamily: document.getElementById('font-select').value
             };
             localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
-            // Apply theme to current page immediately
-            applyTheme(theme);
-            alert('Theme saved and applied!');
-        }
-            localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
-            
             // Apply theme to current page immediately
             applyTheme(theme);
             alert('Theme saved and applied!');
