@@ -451,7 +451,18 @@
                 width: 40px;
                 padding: 5px;
                 min-height: 25px;
-                background-image: url('icons/send');
+                background-image: url('icons/send.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border: none;
+                cursor: pointer;
+            }
+            
+            #menu-button {
+                width: 40px;
+                height: 40px;
+                background-image: url('icons/menu-offnen.png');
                 background-size: contain;
                 background-repeat: no-repeat;
                 background-position: center;
@@ -624,7 +635,7 @@
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
-        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;">MENU</button>
+        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;"></button>
         <div id="menu-options" style="display: none; position: fixed; top: 80px; right: 10px;">
             <button class="logout-button" id="logout-button">LOGOUT</button>
             <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
