@@ -766,6 +766,10 @@
                 <h3>OFFLINE</h3>
                 <div id="offline-users"></div>
             </div>
+            <div class="user-section">
+                <h3>PROGRAMMS</h3>
+                <div id="programms-users"></div>
+            </div>
         </div>
     </div>
     <div class="main-chat">
@@ -948,7 +952,11 @@
                 console.log('User', u, 'unread', unreadPrivate.has(u));
                 return `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`;
             }).join('');
-            
+            document.getElementById('programms-users').innerHTML = programUsers.map(u => {
+                console.log('Program User', u, 'unread', unreadPrivate.has(u));
+                return `<div class="user" onclick="switchToPrivate('${u}')">${u}${unreadPrivate.has(u) ? '<span class="unread-indicator"></span>' : ''}</div>`;
+            }).join('');
+
             // Reapply theme to newly created user list elements
             const savedTheme = localStorage.getItem(`theme_${username}`);
             if (savedTheme) {
