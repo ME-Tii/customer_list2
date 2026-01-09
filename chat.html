@@ -832,7 +832,7 @@
                     var ext = filename.split('.').pop().toLowerCase();
                     var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
                     if (imgTags.includes(ext)) {
-                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'>");
+                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link' style='color: #00ff00;'>Download " + filename + "</a>");
                     } else {
                         processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link' style='color: #00ff00;'>" + filename + "</a>");
                     }
