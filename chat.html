@@ -26,7 +26,6 @@
                 min-height: 100vh;
                 overflow: auto;
                 display: flex;
-                padding-bottom: 40px;
             }
             }
         .sidebar {
@@ -412,14 +411,9 @@
             }
             
             .input-area {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
                 padding: 15px;
                 background: var(--bg-color, #000);
                 border-top: 2px solid var(--accent-color, #00ff00);
-                z-index: 100;
             }
             
             .input-area input[type="text"] {
@@ -615,9 +609,9 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
+        <div class="sidebar">
         <div class="user-list">
-            <input type="text" id="search" placeholder="SEARCH USERS">
+            <input type="text" id="search" placeholder="SEARCH USERS" style="display: none;">
             <div class="user-section">
                 <h3>ONLINE</h3>
                 <div id="online-users"></div>
