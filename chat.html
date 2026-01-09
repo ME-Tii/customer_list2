@@ -436,23 +436,30 @@
                 min-height: 25px;
             }
             
-            .input-area input[type="file"] {
-                width: 50px;
+            .input-area #file-button {
+                width: 40px;
                 margin-right: 10px;
-                margin-bottom: 0;
                 padding: 5px;
                 min-height: 25px;
-                overflow: hidden;
+                font-size: 16px;
             }
             
             .input-area button {
-                padding: 9px 12px;
+                padding: 5px 8px;
                 font-size: 16px;
                 font-weight: bold;
                 margin: 0;
                 min-height: 25px;
-                min-width: 50px;
+                min-width: 40px;
                 border-radius: 8px;
+            }
+            
+            .input-area #file-button {
+                width: 40px;
+                margin-right: 10px;
+                padding: 5px;
+                min-height: 25px;
+                font-size: 16px;
             }
             
             .user-info {
@@ -613,8 +620,9 @@
         <div class="messages" id="messages"></div>
         <div class="input-area">
             <input type="text" id="message-input" placeholder="ENTER MESSAGE">
-            <input type="file" id="file-input">
-            <button id="send-button">SEND</button>
+            <input type="file" id="file-input" style="display: none;">
+            <button id="file-button">📎</button>
+            <button id="send-button">📤</button>
         </div>
     </div>
     <script>
@@ -888,6 +896,10 @@
         document.getElementById('menu-button').addEventListener('click', () => {
             const menu = document.getElementById('menu-options');
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('file-button').addEventListener('click', () => {
+            document.getElementById('file-input').click();
         });
 
         document.getElementById('logout-button').addEventListener('click', () => {
