@@ -660,9 +660,32 @@
         }
         
         @media (max-width: 480px) {
-            .sidebar {
-                max-height: 120px;
+            .messages {
+                margin-bottom: 0;
+                padding: 8px 5px;
             }
+            
+            .input-area {
+                padding: 12px;
+            }
+            
+            .input-area input[type="text"] {
+                font-size: 16px;
+                padding: 15px;
+            }
+            
+            .input-area button {
+                padding: 15px 20px;
+                font-size: 16px;
+                min-width: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #menu-button {
+                top: 10px;
+            }
+        }
             
             .main-chat {
                 flex: 1;
