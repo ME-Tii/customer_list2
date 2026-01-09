@@ -450,9 +450,9 @@
             }
             
             #menu-button {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
             }
             
             .input-area button {
@@ -621,7 +621,7 @@
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
         <button id="menu-button" style="position: fixed; top: 50px; right: 10px;">☰</button>
-        <div id="menu-options" style="display: none; position: fixed; top: 80px; right: 10px; background: var(--bg-color, #000); border: 1px solid var(--accent-color, #00ff00); padding: 10px;">
+        <div id="menu-options" style="display: none; position: fixed; top: 105px; right: 10px; background: var(--bg-color, #000); border: 1px solid var(--accent-color, #00ff00); padding: 10px; display: flex; flex-direction: column; gap: 5px;">
             <button class="logout-button" id="logout-button">LOGOUT</button>
             <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
             <button class="settings-button" id="settings-button">SETTINGS</button>
@@ -905,6 +905,11 @@
         }
 
         document.getElementById('menu-button').addEventListener('click', () => {
+            const menu = document.getElementById('menu-options');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        document.getElementById('menu-button').addEventListener('touchstart', () => {
             const menu = document.getElementById('menu-options');
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
         });
