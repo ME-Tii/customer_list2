@@ -445,7 +445,24 @@
                 margin-right: 10px;
                 padding: 5px;
                 min-height: 25px;
-                font-size: 16px;
+                background-image: url('icons/upload.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border: none;
+                cursor: pointer;
+            }
+            
+            .input-area #send-button {
+                width: 40px;
+                padding: 5px;
+                min-height: 25px;
+                background-image: url('icons/send');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border: none;
+                cursor: pointer;
             }
             
             .input-area button {
@@ -625,8 +642,8 @@
         <div class="input-area">
             <input type="text" id="message-input" placeholder="ENTER MESSAGE">
             <input type="file" id="file-input" style="display: none;">
-            <button id="file-button">📎</button>
-            <button id="send-button">📤</button>
+            <button id="file-button"></button>
+            <button id="send-button"></button>
         </div>
     </div>
     <script>
