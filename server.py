@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
+import requests
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -32,7 +33,7 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('grok', 'grok', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('gemini', 'gemini', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -350,6 +351,25 @@ def on_send_message(data):
         # Private message
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
+        # Check if messaging Gemini
+        if to_user == 'gemini':
+            api_key = os.environ.get('GEMINI_API_KEY', 'AIzaSyCEUFj-r_mziwHnCwBhLnWDVkaPzvlbc58')  # Fallback to provided key
+            if api_key:
+                try:
+                    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}'
+                    resp = requests.post(url, json={'contents': [{'parts': [{'text': message}]}]})
+                    if resp.status_code == 200:
+                        ai_msg = resp.json()['candidates'][0]['content']['parts'][0]['text']
+                        # Store AI response
+                        conn = sqlite3.connect('users.db')
+                        c = conn.cursor()
+                        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('gemini', username, ai_msg))
+                        conn.commit()
+                        conn.close()
+                        # Emit AI response
+                        emit('private_message', {'from': 'gemini', 'message': ai_msg, 'to': username}, to=username)
+                except Exception as e:
+                    print(f"Gemini API error: {e}")
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
