@@ -827,7 +827,7 @@
             var parts = msg.split(' ');
             for (var urlIndex = 0; urlIndex < parts.length; urlIndex++) {
                 var url = parts[urlIndex];
-                if (url.match(/^https?:\/\//)) {
+                if (url.match(/^https?:\/\/|^\//)) {
                     var filename = url.split('/').pop();
                     var ext = filename.split('.').pop().toLowerCase();
                     var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
