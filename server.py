@@ -29,6 +29,9 @@ def init_db():
     if 'read' not in columns:
         c.execute('''ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0''')
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
