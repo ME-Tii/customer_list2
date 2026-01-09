@@ -332,6 +332,7 @@ def on_send_message(data):
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
+        emit('public_message', {'from': username, 'message': message}, to=username)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
