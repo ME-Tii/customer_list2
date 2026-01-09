@@ -33,7 +33,7 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('gemini', 'gemini', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('claude', 'claude', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -341,6 +341,7 @@ def on_send_message(data):
     username = data['username']
     message = data['message']
     to_user = data.get('to')
+    print(f"Send message: from {username} to {to_user}: {message}")
     # Store in db
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
@@ -351,25 +352,46 @@ def on_send_message(data):
         # Private message
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
-        # Check if messaging Gemini
-        if to_user == 'gemini':
-            api_key = os.environ.get('GEMINI_API_KEY', 'AIzaSyCEUFj-r_mziwHnCwBhLnWDVkaPzvlbc58')  # Fallback to provided key
-            if api_key:
-                try:
-                    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}'
-                    resp = requests.post(url, json={'contents': [{'parts': [{'text': message}]}]})
-                    if resp.status_code == 200:
-                        ai_msg = resp.json()['candidates'][0]['content']['parts'][0]['text']
-                        # Store AI response
-                        conn = sqlite3.connect('users.db')
-                        c = conn.cursor()
-                        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('gemini', username, ai_msg))
-                        conn.commit()
-                        conn.close()
-                        # Emit AI response
-                        emit('private_message', {'from': 'gemini', 'message': ai_msg, 'to': username}, to=username)
-                except Exception as e:
-                    print(f"Gemini API error: {e}")
+        # Check if messaging Claude
+        if to_user == 'claude':
+            print(f"Messaging Claude from {username}: {message}")
+            api_key = os.environ.get('ANTHROPIC_API_KEY')
+            if not api_key:
+                print("No ANTHROPIC_API_KEY set")
+                return
+            try:
+                url = 'https://api.anthropic.com/v1/messages'
+                headers = {
+                    'x-api-key': api_key,
+                    'anthropic-version': '2023-06-01',
+                    'Content-Type': 'application/json'
+                }
+                data = {
+                    'model': 'claude-3-5-sonnet-20241022',
+                    'max_tokens': 1024,
+                    'messages': [{'role': 'user', 'content': message}]
+                }
+                print(f"Calling Claude API")
+                resp = requests.post(url, headers=headers, json=data)
+                print(f"Claude API response status: {resp.status_code}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    print(f"Claude response data: {data}")
+                    ai_msg = data['content'][0]['text']
+                    print(f"Claude AI message: {ai_msg}")
+                    # Store AI response
+                    conn = sqlite3.connect('users.db')
+                    c = conn.cursor()
+                    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('claude', username, ai_msg))
+                    conn.commit()
+                    conn.close()
+                    # Emit AI response
+                    emit('private_message', {'from': 'claude', 'message': ai_msg, 'to': username}, to=username)
+                    print("Claude response emitted")
+                else:
+                    print(f"Claude API error response: {resp.text}")
+            except Exception as e:
+                print(f"Claude API exception: {e}")
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
