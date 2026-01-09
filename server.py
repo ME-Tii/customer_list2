@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
-import requests
+import random
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -34,6 +34,7 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('grok', 'grok', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('big_5', 'big_5', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -352,46 +353,49 @@ def on_send_message(data):
         # Private message
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
-        # Check if messaging Grok
+        # Predefined response lists
+        general_responses = [
+            "That's cool!",
+            "Tell me more.",
+            "Interesting!",
+            "I agree.",
+            "What do you think?",
+            "Nice one!",
+            "Good point.",
+            "Hmm, okay.",
+            "Sounds fun!",
+            "Let's chat more."
+        ]
+
+        programms_responses = [
+            "That's a solid algorithm!",
+            "Have you tried debugging?",
+            "Nice code snippet!",
+            "Version control is key.",
+            "Optimization matters.",
+            "Error handling is important.",
+            "Great use of libraries!",
+            "Testing is crucial.",
+            "Clean code rocks!",
+            "Keep coding!"
+        ]
+
+        # Check if messaging a pre-programmed chat
         if to_user == 'grok':
-            print(f"Messaging Grok from {username}: {message}")
-            api_key = os.environ.get('GROK_API_KEY')
-            if not api_key:
-                print("No GROK_API_KEY set")
-                return
-            try:
-                url = 'https://api.x.ai/v1/chat/completions'
-                headers = {
-                    'Authorization': f'Bearer {api_key}',
-                    'Content-Type': 'application/json'
-                }
-                data = {
-                    'model': 'grok-beta',
-                    'messages': [{'role': 'user', 'content': message}],
-                    'stream': False,
-                    'temperature': 0
-                }
-                print(f"Calling Grok API")
-                resp = requests.post(url, headers=headers, json=data)
-                print(f"Grok API response status: {resp.status_code}")
-                if resp.status_code == 200:
-                    data = resp.json()
-                    print(f"Grok response data: {data}")
-                    ai_msg = data['choices'][0]['message']['content']
-                    print(f"Grok AI message: {ai_msg}")
-                    # Store AI response
-                    conn = sqlite3.connect('users.db')
-                    c = conn.cursor()
-                    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('grok', username, ai_msg))
-                    conn.commit()
-                    conn.close()
-                    # Emit AI response
-                    emit('private_message', {'from': 'grok', 'message': ai_msg, 'to': username}, to=username)
-                    print("Grok response emitted")
-                else:
-                    print(f"Grok API error response: {resp.text}")
-            except Exception as e:
-                print(f"Grok API exception: {e}")
+            ai_msg = random.choice(general_responses)
+        elif to_user == 'big_5':
+            ai_msg = random.choice(programms_responses)
+        else:
+            return  # Not a pre-programmed chat
+
+        # Store AI response
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (to_user, username, ai_msg))
+        conn.commit()
+        conn.close()
+        # Emit AI response
+        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
