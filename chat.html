@@ -436,7 +436,7 @@
                 font-size: 12px;
                 line-height: 1.5;
                 margin-bottom: 0;
-                padding: 10px 215px 10px 5px;
+                padding: 10px 5px 10px 5px;
                 border: 1px solid var(--accent-color, #00ff00);
                 border-radius: 8px;
             }
@@ -608,7 +608,7 @@
                 margin-bottom: 0;
                 font-size: 16px;
                 line-height: 1.5;
-                padding-left: 215px;
+                padding-left: 5px;
                 padding-bottom: 10px;
             }
             
@@ -670,8 +670,7 @@
             
             .messages {
                 margin-bottom: 0;
-                padding: 8px;
-                padding-left: 215px;
+                padding: 8px 5px;
                 padding-bottom: 10px;
             }
             
@@ -716,9 +715,9 @@
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
-        <button id="menu-button" style="position: fixed; top: 50px; right: 10px;">☰</button>
-        <div id="menu-options" style="display: none; position: fixed; top: 115px; right: 10px; padding: 10px; background: var(--bg-color, #000); border: 1px solid var(--accent-color, #00ff00);">
-            <button id="users-button">USERS</button>
+        <button id="menu-button" style="position: fixed; top: 60px; right: 10px; z-index: 1003;">☰</button>
+        <div id="menu-options" style="display: none; position: fixed; top: 115px; right: 10px; padding: 10px; background: var(--bg-color, #000); border: 1px solid var(--accent-color, #00ff00); z-index: 1003;">
+            <button id="users-button" style="background-color: #00ff00; color: #000; border: 0; padding: 5px 10px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 12px; text-transform: uppercase;">USERS</button>
             <button class="logout-button" id="logout-button">LOGOUT</button>
             <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
             <button class="settings-button" id="settings-button">SETTINGS</button>
