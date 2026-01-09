@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
+import requests
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -350,6 +351,26 @@ def on_send_message(data):
         # Private message
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
         emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
+        # Check if messaging Grok
+        if to_user == 'grok':
+            api_key = os.environ.get('GROK_API_KEY')
+            if api_key:
+                try:
+                    resp = requests.post('https://api.x.ai/v1/chat/completions', 
+                                         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}, 
+                                         json={'model': 'grok-beta', 'messages': [{'role': 'user', 'content': message}], 'stream': False, 'temperature': 0})
+                    if resp.status_code == 200:
+                        ai_msg = resp.json()['choices'][0]['message']['content']
+                        # Store AI response
+                        conn = sqlite3.connect('users.db')
+                        c = conn.cursor()
+                        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('grok', username, ai_msg))
+                        conn.commit()
+                        conn.close()
+                        # Emit AI response
+                        emit('private_message', {'from': 'grok', 'message': ai_msg, 'to': username}, to=username)
+                except Exception as e:
+                    print(f"Grok API error: {e}")
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
