@@ -6,18 +6,19 @@
     <title>Settings</title>
     <style>
         body {
-            font-family: 'Courier New', monospace;
-            background-color: #000;
-            color: #00ff00;
+            font-family: var(--font-family, 'Courier New', monospace);
+            background-color: var(--bg-color, #000);
+            color: var(--text-color, #00ff00);
             margin: 0;
             padding: 20px;
         }
         h1 {
             text-shadow: 0 0 5px var(--accent-color, #00ff00);
+            color: var(--text-color, #00ff00);
         }
         .section {
             margin-bottom: 30px;
-            border: 1px solid #00ff00;
+            border: 1px solid var(--accent-color, #00ff00);
             padding: 15px;
         }
         .form-group {
@@ -32,10 +33,10 @@
         input[type="text"], input[type="password"], input[type="color"] {
             width: 100%;
             padding: 8px;
-            background-color: #000;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color, #000);
+            border: 1px solid var(--accent-color, #00ff00);
+            color: var(--text-color, #00ff00);
+            font-family: var(--font-family, 'Courier New', monospace);
         }
         input[type="color"] {
             width: 50px;
@@ -44,10 +45,10 @@
         select {
             width: 100%;
             padding: 8px;
-            background-color: #000;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color, #000);
+            border: 1px solid var(--accent-color, #00ff00);
+            color: var(--text-color, #00ff00);
+            font-family: var(--font-family, 'Courier New', monospace);
         }
         button {
             background-color: #00ff00;
@@ -398,14 +399,14 @@
         
         document.getElementById('back-btn').href = `chat.html?username=${username}`;
 
-        // Load saved theme
+        // Load and apply saved theme
         const savedTheme = localStorage.getItem(`theme_${username}`);
-        if (savedTheme) {
-            const theme = JSON.parse(savedTheme);
-            document.getElementById('text-color').value = theme.textColor || '#00ff00';
-            document.getElementById('bg-color').value = theme.bgColor || '#000000';
-            document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
-            document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
+        const theme = savedTheme ? JSON.parse(savedTheme) : {};
+        document.getElementById('text-color').value = theme.textColor || '#00ff00';
+        document.getElementById('bg-color').value = theme.bgColor || '#000000';
+        document.getElementById('accent-color').value = theme.accentColor || '#00ff00';
+        document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
+        applyTheme(theme);
             updatePreviews();
             applyTheme(theme);
         }
@@ -459,6 +460,11 @@
                 fontFamily: document.getElementById('font-select').value
             };
             localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
+            // Apply theme to current page immediately
+            applyTheme(theme);
+            alert('Theme saved and applied!');
+        }
+            localStorage.setItem(`theme_${username}`, JSON.stringify(theme));
             
             // Apply theme to current page immediately
             applyTheme(theme);
@@ -466,21 +472,29 @@
         }
         
         function applyTheme(theme) {
-            document.body.style.backgroundColor = theme.bgColor;
-            document.body.style.color = theme.textColor;
+            const root = document.documentElement;
+            root.style.setProperty('--text-color', theme.textColor || '#00ff00');
+            root.style.setProperty('--bg-color', theme.bgColor || '#000000');
+            root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
+            root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
             document.body.style.fontFamily = theme.fontFamily || "'Courier New', monospace";
             
             // Update all elements
             const elementsToUpdate = [
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'color', value: theme.textColor },
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'borderColor', value: theme.accentColor },
-                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'backgroundColor', value: theme.bgColor },
-                { selector: 'button', property: 'backgroundColor', value: theme.accentColor },
-                { selector: 'button', property: 'color', value: theme.bgColor },
-                { selector: '.section', property: 'borderColor', value: theme.accentColor },
-                { selector: '.theme-preview', property: 'borderColor', value: theme.accentColor },
-                { selector: '.back-btn', property: 'backgroundColor', value: theme.accentColor },
-                { selector: '.back-btn', property: 'color', value: theme.bgColor }
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'color', value: theme.textColor || '#00ff00' },
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'borderColor', value: theme.accentColor || '#00ff00' },
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'backgroundColor', value: theme.bgColor || '#000000' },
+                { selector: 'input[type="text"], input[type="password"], input[type="color"]', property: 'fontFamily', value: theme.fontFamily || "'Courier New', monospace" },
+                { selector: 'select', property: 'color', value: theme.textColor || '#00ff00' },
+                { selector: 'select', property: 'borderColor', value: theme.accentColor || '#00ff00' },
+                { selector: 'select', property: 'backgroundColor', value: theme.bgColor || '#000000' },
+                { selector: 'select', property: 'fontFamily', value: theme.fontFamily || "'Courier New', monospace" },
+                { selector: 'button', property: 'backgroundColor', value: theme.accentColor || '#00ff00' },
+                { selector: 'button', property: 'color', value: theme.bgColor || '#000000' },
+                { selector: '.section', property: 'borderColor', value: theme.accentColor || '#00ff00' },
+                { selector: '.theme-preview', property: 'borderColor', value: theme.accentColor || '#00ff00' },
+                { selector: '.back-btn', property: 'backgroundColor', value: theme.accentColor || '#00ff00' },
+                { selector: '.back-btn', property: 'color', value: theme.bgColor || '#000000' }
             ];
             
             elementsToUpdate.forEach(({ selector, property, value }) => {
@@ -489,7 +503,8 @@
             });
             
             // Update text shadows
-            document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor}`;
+            document.querySelector('h1').style.textShadow = `0 0 5px ${theme.accentColor || '#00ff00'}`;
+            document.querySelector('h1').style.color = theme.textColor || '#00ff00';
             // Apply font to all elements
             const allElements = document.querySelectorAll('*');
             allElements.forEach(el => {
@@ -502,7 +517,8 @@
             document.getElementById('text-color').value = '#00ff00';
             document.getElementById('bg-color').value = '#000000';
             document.getElementById('accent-color').value = '#00ff00';
-            updatePreviews();
+            document.getElementById('font-select').value = "'Courier New', monospace";
+            applyTheme({});
             alert('Theme reset to default');
         }
 
