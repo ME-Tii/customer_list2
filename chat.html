@@ -22,7 +22,7 @@
             @media (max-width: 768px) {
             body {
                 flex-direction: column;
-                font-size: 14px;
+                font-size: 12px;
                 overflow: auto;
                 display: flex;
             }
@@ -401,7 +401,7 @@
                 max-height: 50vh;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
-                font-size: 16px;
+                font-size: 12px;
                 line-height: 1.5;
                 margin-bottom: 0;
                 padding: 10px;
@@ -875,10 +875,10 @@
 
         document.getElementById('back-button').addEventListener('click', switchToPublic);
 
-        let sending = false;
         document.getElementById('send-button').addEventListener('click', async () => {
-            if (sending) return;
-            sending = true;
+            const sendButton = document.getElementById('send-button');
+            if (sendButton.disabled) return;
+            sendButton.disabled = true;
             const msg = document.getElementById('message-input').value.trim();
             const fileInput = document.getElementById('file-input');
             let message = msg;
@@ -896,7 +896,7 @@
                     }
                 } catch (error) {
                     alert('Upload failed: ' + error.message);
-                    sending = false;
+                    sendButton.disabled = false;
                     return;
                 }
                 fileInput.value = '';
@@ -906,7 +906,7 @@
                 addMessage(username + ' <small>[' + new Date().toLocaleTimeString() + ']</small>: ' + message);
                 document.getElementById('message-input').value = '';
             }
-            setTimeout(() => sending = false, 2000);
+            setTimeout(() => sendButton.disabled = false, 2000);
         });
 
         document.getElementById('message-input').addEventListener('keypress', (e) => {
