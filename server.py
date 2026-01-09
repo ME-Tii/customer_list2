@@ -35,6 +35,8 @@ def init_db():
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('grok', 'grok', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('big_5', 'big_5', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('claude', 'claude', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('gemini', 'gemini', 1))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
@@ -374,9 +376,9 @@ def on_send_message(data):
             "Version control is key.",
             "Optimization matters.",
             "Error handling is important.",
-            "Great use of libraries!",
-            "Testing is crucial.",
             "Clean code rocks!",
+            "Testing is crucial.",
+            "Great use of libraries!",
             "Keep coding!"
         ]
 
@@ -385,6 +387,10 @@ def on_send_message(data):
             ai_msg = random.choice(general_responses)
         elif to_user == 'big_5':
             ai_msg = random.choice(programms_responses)
+        elif to_user == 'claude':
+            ai_msg = random.choice(general_responses)  # Placeholder, can customize later
+        elif to_user == 'gemini':
+            ai_msg = random.choice(general_responses)  # Placeholder
         else:
             return  # Not a pre-programmed chat
 
