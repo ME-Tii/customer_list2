@@ -96,7 +96,7 @@ def upload_file():
             return jsonify({'error': str(e)}), 500
     return jsonify({'error': 'File processing failed'}), 400
 
-@app.route('/uploads/<path:filename>')
+@app.route('/uploads/<filename>')
 def serve_upload(filename):
     return send_from_directory('uploads', filename)
 
