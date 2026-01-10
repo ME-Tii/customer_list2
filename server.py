@@ -398,6 +398,7 @@ def on_send_message(data):
         ]
 
         # Check if messaging a pre-programmed chat
+        print(f"Message from {username} to {to_user}: {message}")
         if to_user == 'grok':
             ai_msg = random.choice(general_responses)
         elif to_user == 'big_5':
@@ -416,7 +417,7 @@ def on_send_message(data):
 
             if step == 0:
                 if message.lower() == 's':
-                    ai_msg = f"Question 1: {big5_questions[0]['text']}\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                    ai_msg = "Question 1: " + big5_questions[0]['text'] + "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
                     step = 1
                 else:
                     ai_msg = "This is the Big 5 personality test. Start by writing 's'."
@@ -446,12 +447,63 @@ def on_send_message(data):
                 except ValueError:
                     ai_msg = f"Invalid. Question {step}: {big5_questions[step - 1]['text']}\nReply with 1-5."
             else:
-                ai_msg = "Test already completed. Start a new one by saying 's'." if step == -1 else "Unknown state."
+                ai_msg = "Unknown state."
 
             # Update session
             c2.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
             conn2.commit()
             conn2.close()
+
+        elif to_user == 'decision_matrix':
+            print(f"Decision matrix triggered for {username}: {message}")
+            # Decision Matrix - guides through questions to determine life focus
+            conn3 = sqlite3.connect('users.db')
+            c3 = conn3.cursor()
+            c3.execute('SELECT step, scores FROM big5_sessions WHERE username = ?', (username,))
+            row = c3.fetchone()
+            if row:
+                step, scores_str = row
+                scores = eval(scores_str)  # Simple dict
+            else:
+                step = 0
+                scores = {}
+                c3.execute('INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
+
+            if step == 0:
+                if message.lower() == 's':
+                    ai_msg = "First question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
+                    step = 1
+                else:
+                    ai_msg = "This is the Decision Matrix. Send 's' to start."
+            elif step == 1:
+                answer = message.strip().upper()
+                if answer == 'A':
+                    ai_msg = "Your decision matrix result: Focus on financial success and career growth."
+                elif answer == 'B':
+                    ai_msg = "Your decision matrix result: Prioritize relationships and social connections."
+                elif answer == 'C':
+                    ai_msg = "Your decision matrix result: Explore philosophy and intellectual pursuits."
+                elif answer == 'D':
+                    ai_msg = "Your decision matrix result: Embrace enjoyment and leisure activities."
+                elif answer == 'E':
+                    ai_msg = "Your decision matrix result: Dedicate to helping others and altruism."
+                elif answer == 'F':
+                    ai_msg = "Your decision matrix result: Focus on scientific research and discovery."
+                else:
+                    ai_msg = "Invalid. First question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
+                    step = 1  # Stay on step
+
+                if answer in 'ABCDEF':
+                    step = -1  # Completed
+            else:
+                ai_msg = "Decision Matrix completed. Send 's' to restart."
+
+            print(f"Decision matrix response: {ai_msg}")
+            # Update session
+            c3.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
+            conn3.commit()
+            conn3.close()
+
         elif to_user == 'claude':
             ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'gemini':

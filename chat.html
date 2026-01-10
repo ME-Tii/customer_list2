@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Chat Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="http://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
             body {
                 font-size: 14px;
@@ -36,7 +36,15 @@
         }
         
         #menu-button {
-            display: none;
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            z-index: 1003;
+            background-color: var(--accent-color, #00ff00) !important;
+            color: var(--bg-color, #000) !important;
+            border: 1px solid var(--accent-color, #00ff00) !important;
+            border-radius: 5px;
+            cursor: pointer;
         }
         
         .sidebar {
@@ -52,7 +60,7 @@
             }
         .sidebar {
             width: 250px;
-            border-right: 2px solid #00ff00;
+            border-right: 2px solid var(--accent-color, #00ff00);
             padding: 10px;
             display: flex;
             flex-direction: column;
@@ -63,10 +71,10 @@
         input[type="text"] {
             width: 90%;
             padding: 8px;
-            background-color: #000;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-family: 'Press Start 2P', monospace;
+            background-color: var(--bg-color, #000);
+            border: 1px solid var(--accent-color, #00ff00);
+            color: var(--text-color, #00ff00);
+            font-family: var(--font-family, 'Press Start 2P', monospace);
         }
         .user-list {
             flex: 1;
@@ -87,6 +95,7 @@
             margin-bottom: 5px;
             text-align: center;
             position: relative;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
         }
         .unread-indicator {
             display: inline-block;
@@ -106,7 +115,7 @@
             flex-direction: column;
             padding: 5px 0;
             padding-bottom: 0;
-            border-right: 2px solid #00ff00;
+            border-right: 2px solid var(--accent-color, #00ff00);
             overflow-x: hidden;
             flex: 1;
             height: calc(100vh - 50px);
@@ -132,7 +141,7 @@
             margin: 0;
         }
         .message {
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             margin-bottom: 10px;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -141,7 +150,7 @@
             width: fit-content;
             box-sizing: border-box;
             background-color: var(--accent-color, #00ff00);
-            color: var(--bg-color, #000);
+            color: var(--text-color, #00ff00);
             border: 1px solid var(--accent-color, #00ff00);
             border-radius: 10px;
             padding: 10px;
@@ -159,8 +168,8 @@
             text-align: left;
         }
         .file-link {
-            color: black;
-            background: white;
+            color: var(--bg-color, #000);
+            background: var(--accent-color, #00ff00);
             padding: 2px 4px;
             border-radius: 3px;
             text-decoration: none;
@@ -177,13 +186,13 @@
         .input-area {
             display: flex;
             align-items: center;
-            border-top: 1px solid #00ff00;
+            border-top: 1px solid var(--accent-color, #00ff00);
             padding: 3px 10px;
             position: fixed;
             bottom: 0;
             left: 260px;
             right: 10px;
-            background-color: #000;
+            background-color: var(--bg-color, #000);
             height: 50px;
             margin: 0;
         }
@@ -212,13 +221,13 @@
         .input-area input[type="file"]:hover {
             background-color: #33ff33;
         }
-        .input-area button {
-            background-color: #00ff00;
-            color: #000;
+        .input-area         button {
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none;
             padding: 6px 12px !important;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             font-weight: bold;
             text-transform: uppercase;
             margin-left: 8px;
@@ -233,13 +242,13 @@
             position: absolute;
             top: 90px;
             right: 10px;
-            background-color: #00ff00;
-            color: #000;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none !important;
             outline: none !important;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             font-size: 12px;
             text-transform: uppercase;
             z-index: 10;
@@ -252,12 +261,13 @@
             position: absolute;
             top: 60px;
             right: 10px;
-            background-color: #00ff00;
-            color: #000;
+            margin-right: 40px;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             text-transform: uppercase;
             z-index: 10;
         }
@@ -279,12 +289,12 @@
             position: absolute;
             top: 120px;
             right: 10px;
-            background-color: #00ff00;
-            color: #000;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             font-size: 12px;
             text-transform: uppercase;
             z-index: 10;
@@ -296,12 +306,12 @@
             position: absolute;
             top: 150px;
             right: 10px;
-            background-color: #ff0000;
-            color: #000;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             font-size: 12px;
             text-transform: uppercase;
             z-index: 10;
@@ -313,12 +323,12 @@
             position: absolute;
             top: 60px;
             right: 10px;
-            background-color: #ffaa00;
-            color: #000;
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
             border: none;
             padding: 5px 10px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             font-size: 12px;
             text-transform: uppercase;
             z-index: 10;
@@ -389,6 +399,7 @@
                 align-items: center;
                 cursor: pointer;
                 transition: background-color 0.2s;
+                font-family: var(--font-family, 'Press Start 2P', monospace);
             }
             
             .user:active {
@@ -460,20 +471,21 @@
                 border-bottom: 1px solid var(--accent-color, #00ff00);
             }
             
-            .messages {
-                max-height: calc(100vh - 200px);
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                font-size: 12px;
-                line-height: 1.5;
-                margin-bottom: 0;
-                padding: 10px 5px 10px 5px;
-                border: 1px solid var(--accent-color, #00ff00);
-                border-radius: 8px;
-            }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            font-size: 12px;
+            line-height: 1.5;
+                  padding: 10px 215px 490px 5px;
+            border: 1px solid var(--accent-color, #00ff00);
+            border-radius: 10px;
+            width: 100%;
+            margin: 0;
+        }
             
         .message {
-            font-family: 'Press Start 2P', monospace;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
             margin-bottom: 10px;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -482,7 +494,7 @@
             width: fit-content;
             box-sizing: border-box;
             background-color: var(--accent-color, #00ff00);
-            color: var(--bg-color, #000);
+            color: var(--text-color, #00ff00);
             border: 1px solid var(--accent-color, #00ff00);
             border-radius: 10px;
             padding: 10px;
@@ -536,21 +548,6 @@
                 font-size: 16px;
             }
             
-            #menu-button {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
-                padding: 0;
-                text-align: center;
-                line-height: 60px;
-                z-index: 1003;
-                background-color: #00ff00;
-                color: #000;
-                border: 1px solid #00ff00;
-                border-radius: 5px;
-                cursor: pointer;
-            }
-            
             #menu-options {
                 display: flex;
                 flex-direction: column;
@@ -560,13 +557,30 @@
             }
             
             #menu-options button {
-                background-color: var(--accent-color, #00ff00);
-                color: var(--bg-color, #000);
+                background-color: var(--bg-color, #000);
+                color: var(--accent-color, #00ff00);
                 border: none;
                 border-radius: 5px;
                 padding: 10px;
                 cursor: pointer;
             }
+            
+            #menu-button {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                padding: 0;
+                text-align: center;
+                line-height: 60px;
+                z-index: 1003;
+                background-color: var(--accent-color, #00ff00) !important;
+                color: var(--bg-color, #000) !important;
+                border: 1px solid var(--accent-color, #00ff00) !important;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            
+
             
             #close-sidebar {
                 display: block !important;
@@ -648,12 +662,7 @@
                 margin-bottom: 15px;
                 padding: 10px;
                 font-size: 16px;
-            }
-            
-            .message {
-                margin-bottom: 15px;
-                padding: 10px;
-                font-size: 16px;
+                font-family: var(--font-family, 'Press Start 2P', monospace);
             }
             
             .input-area {
@@ -775,12 +784,14 @@
     <div class="main-chat">
         <div class="user-info" id="user-info">LOGGED IN AS: </div>
         <div class="online-count" id="online-count">USERS ONLINE: 0</div>
-        <button id="menu-button" style="position: fixed; top: 60px; right: 10px; z-index: 1003;">☰</button>
-        <div id="menu-options" style="display: none; position: fixed; top: 115px; right: 10px; padding: 10px; background: var(--bg-color, #000); border: none; z-index: 2000;">
-            <button class="settings-button" id="settings-button">SETTINGS</button>
-            <button id="users-button">USERS</button>
-            <button class="logout-button" id="logout-button">LOGOUT</button>
-            <button class="admin-button" id="admin-button" style="display: none;">ADMIN</button>
+        <div id="menu-container" style="position: fixed; top: 60px; right: 10px; z-index: 1003;">
+            <button id="menu-button" style="width: 40px; height: 40px; font-size: 16px;">☰</button>
+            <div id="menu-options" style="display: none; padding: 10px; background: var(--accent-color, #00ff00); border: 1px solid var(--accent-color, #00ff00); border-radius: 0; margin-top: 5px; z-index: 1002;">
+                <button class="settings-button" id="settings-button" style="margin-top: 20px;">SETTINGS</button>
+                <button id="users-button" style="margin-top: 20px;">USERS</button>
+                <button class="logout-button" id="logout-button" style="margin-top: 20px;">LOGOUT</button>
+                <button class="admin-button" id="admin-button" style="display: none; margin-top: 20px;">ADMIN</button>
+            </div>
         </div>
         <h2 class="chat-title" id="chat-title">PUBLIC CHAT</h2>
         <button class="back-button" id="back-button">BACK TO PUBLIC</button>
@@ -793,13 +804,19 @@
         </div>
     </div>
     <script>
-        const socket = io();
+        let socket;
+        try {
+            socket = io();
+        } catch (e) {
+            console.error('Socket.IO failed to load:', e);
+            alert('Socket.IO failed to load. Some features may not work.');
+        }
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username');
         let currentChat = 'public'; // 'public' or username for private
         let allUsers = [];
         let onlineUsers = [];
-        let programUsers = ['grok', 'big_5', 'claude', 'gemini'];
+        let programUsers = ['grok', 'big_5', 'claude', 'gemini', 'decision_matrix'];
         let unreadPrivate = new Set();
 
         document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
@@ -847,10 +864,14 @@
                 { selector: '.file-link', property: 'color', value: theme.accentColor }
             ];
             
-            elementsToUpdate.forEach(({ selector, property, value }) => {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(el => el.style[property] = value);
-            });
+             elementsToUpdate.forEach(({ selector, property, value }) => {
+                 if (selector === 'button' && (property === 'backgroundColor' || property === 'color')) {
+                     // Keep buttons always visible: green bg, black text
+                     return;
+                 }
+                 const elements = document.querySelectorAll(selector);
+                 elements.forEach(el => el.style[property] = value);
+             });
             
             // Also update dynamically created user elements
             const userElements = document.querySelectorAll('.user');
@@ -1107,10 +1128,7 @@
                  });
         }
 
-        document.getElementById('menu-button').addEventListener('click', () => {
-            const menu = document.getElementById('menu-options');
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        });
+
 
         document.getElementById('users-button').addEventListener('click', () => {
             const sidebar = document.querySelector('.sidebar');
@@ -1149,6 +1167,55 @@
 
         document.getElementById('settings-button').addEventListener('click', () => {
             window.location.href = `/settings.html?username=${username}`;
+        });
+
+        document.getElementById('users-button').addEventListener('click', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const inputArea = document.querySelector('.input-area');
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+            } else {
+                if (sidebar.style.display === 'none') {
+                    sidebar.style.display = 'block';
+                    inputArea.style.left = '260px';
+                    inputArea.style.right = '0';
+                } else {
+                    sidebar.style.display = 'none';
+                    inputArea.style.left = '0';
+                    inputArea.style.right = '0';
+                }
+            }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+            socket.emit('leave', { username });
+            setTimeout(() => window.location.href = '/', 100);
+        });
+
+        document.getElementById('admin-button').addEventListener('click', () => {
+            window.location.href = `/admin.html?username=${username}`;
+        });
+
+        document.getElementById('menu-button').addEventListener('click', () => {
+            const menu = document.getElementById('menu-options');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Close menu options on outside click
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('menu-container');
+            const menu = document.getElementById('menu-options');
+            if (!container.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Add key listener for resetting theme
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                localStorage.removeItem(`theme_${username}`);
+                location.reload();
+            }
         });
     </script>
 </body>
