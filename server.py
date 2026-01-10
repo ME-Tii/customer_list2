@@ -24,6 +24,8 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, read INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS big5_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
+    c.execute('''CREATE TABLE IF NOT EXISTS decision_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
+    c.execute('''CREATE TABLE IF NOT EXISTS navigator_sessions (username TEXT PRIMARY KEY, cwd TEXT DEFAULT '')''')
     
     # Check if read column exists in messages table
     c.execute('''PRAGMA table_info(messages)''')
@@ -114,9 +116,29 @@ def upload_file():
 def serve_upload(filename):
     return send_from_directory('uploads', filename)
 
+@app.route('/uploads')
+def serve_uploads_dir():
+    import os
+    files = os.listdir('uploads')
+    html = '<h1>Uploads Directory</h1><ul>'
+    for f in files:
+        html += f'<li><a href="/uploads/{f}">{f}</a></li>'
+    html += '</ul>'
+    return html
+
 @app.route('/icons/<path:filename>')
 def serve_icons(filename):
     return send_from_directory('icons', filename)
+
+@app.route('/icons')
+def serve_icons_dir():
+    import os
+    files = os.listdir('icons')
+    html = '<h1>Icons Directory</h1><ul>'
+    for f in files:
+        html += f'<li><a href="/icons/{f}">{f}</a></li>'
+    html += '</ul>'
+    return html
 
 
 @app.route('/test_route')
@@ -415,6 +437,11 @@ def on_send_message(data):
                 scores = {}
                 c2.execute('INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
 
+            # Allow restart with 's' at any time
+            if message.lower() == 's':
+                ai_msg = "Question 1: " + big5_questions[0]['text'] + "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                step = 1
+
             if step == 0:
                 if message.lower() == 's':
                     ai_msg = "Question 1: " + big5_questions[0]['text'] + "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
@@ -447,7 +474,10 @@ def on_send_message(data):
                 except ValueError:
                     ai_msg = f"Invalid. Question {step}: {big5_questions[step - 1]['text']}\nReply with 1-5."
             else:
-                ai_msg = "Unknown state."
+                if step == -1:
+                    ai_msg = "Test completed. Send 's' to restart a new test."
+                else:
+                    ai_msg = "Unknown state."
 
             # Update session
             c2.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
@@ -455,21 +485,28 @@ def on_send_message(data):
             conn2.close()
 
         elif to_user == 'decision_matrix':
-            print(f"Decision matrix triggered for {username}: {message}")
             # Decision Matrix - guides through questions to determine life focus
             conn3 = sqlite3.connect('users.db')
             c3 = conn3.cursor()
-            c3.execute('SELECT step, scores FROM big5_sessions WHERE username = ?', (username,))
+            c3.execute('SELECT step, scores FROM decision_sessions WHERE username = ?', (username,))
             row = c3.fetchone()
+            step = 0  # Initialize
+            scores = {}
             if row:
                 step, scores_str = row
                 scores = eval(scores_str)  # Simple dict
             else:
-                step = 0
-                scores = {}
-                c3.execute('INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
+                c3.execute('INSERT INTO decision_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
 
-            if step == 0:
+            print(f"Decision matrix: message={repr(message)}, step={step}")
+            # Allow restart with 's' at any time
+            print(f"Checking restart: '{message.lower()}' == 's'? {message.lower() == 's'}")
+            if message.lower() == 's':
+                print("Restart triggered")
+                scores = {}  # Reset scores on restart
+                ai_msg = "First question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
+                step = 1
+            elif step == 0:
                 if message.lower() == 's':
                     ai_msg = "First question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
                     step = 1
@@ -478,29 +515,73 @@ def on_send_message(data):
             elif step == 1:
                 answer = message.strip().upper()
                 if answer == 'A':
-                    ai_msg = "Your decision matrix result: Focus on financial success and career growth."
-                elif answer == 'B':
-                    ai_msg = "Your decision matrix result: Prioritize relationships and social connections."
-                elif answer == 'C':
-                    ai_msg = "Your decision matrix result: Explore philosophy and intellectual pursuits."
-                elif answer == 'D':
-                    ai_msg = "Your decision matrix result: Embrace enjoyment and leisure activities."
-                elif answer == 'E':
-                    ai_msg = "Your decision matrix result: Dedicate to helping others and altruism."
-                elif answer == 'F':
-                    ai_msg = "Your decision matrix result: Focus on scientific research and discovery."
+                    ai_msg = "Good, what are you good at?\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
+                    step = 2
+                elif answer in 'BCDEF':
+                    ai_msg = "In order to do those things you need time. And time is money.\n\nFirst question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
+                    step = 1
                 else:
                     ai_msg = "Invalid. First question: What's the point of life?\nA: Making Money\nB: Having good relations\nC: Philosophical discovery\nD: Having fun\nE: Helping others\nF: Doing science\nReply with A, B, C, D, E, or F."
-                    step = 1  # Stay on step
+                    step = 1
+            elif step == 2:
+                answer = message.strip().upper()
+                if answer in 'ABCDE':
+                    learning = scores.get('learning', False)
+                    if learning:
+                        if answer == 'A':
+                            ai_msg = "You should learn social skills for financial success."
+                        elif answer == 'B':
+                            ai_msg = "You should learn technical skills to build wealth."
+                        elif answer == 'C':
+                            ai_msg = "You should learn creative skills to monetize your talents."
+                        elif answer == 'D':
+                            ai_msg = "You should learn mathematical skills to apply to financial strategies."
+                        elif answer == 'E':
+                            ai_msg = "You should learn physical skills to develop into profitable ventures."
+                        step = -1
+                    else:
+                        scores['skill'] = answer
+                        ai_msg = "Do people like and want your skills? Reply with Yes or No."
+                        step = 3
+                elif answer == 'F':
+                    scores['learning'] = True
+                    ai_msg = "What do you want to learn?\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
+                    step = 2
+                else:
+                    question = "What do you want to learn?" if scores.get('learning') else "What are you good at?"
+                    ai_msg = f"Invalid. {question}\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
+                    step = 2
 
-                if answer in 'ABCDEF':
-                    step = -1  # Completed
+            elif step == 3:
+                response = message.strip().lower()
+                if response == 'yes':
+                    skill = scores.get('skill', 'A')
+                    result = ""
+                    if skill == 'A':
+                        result = "Leverage your social skills for financial success."
+                    elif skill == 'B':
+                        result = "Use your technical expertise to build wealth."
+                    elif skill == 'C':
+                        result = "Monetize your creative talents."
+                    elif skill == 'D':
+                        result = "Apply your mathematical abilities to financial strategies."
+                    elif skill == 'E':
+                        result = "Develop your physical skills into profitable ventures."
+                    ai_msg = "Good keep going! " + result
+                    step = -1
+                elif response == 'no':
+                    scores['learning'] = True
+                    ai_msg = "Go back to learning and training.\n\nWhat do you want to learn?\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
+                    step = 2
+                else:
+                    ai_msg = "Invalid. Do people like and want your skills? Reply with Yes or No."
+                    step = 3
             else:
                 ai_msg = "Decision Matrix completed. Send 's' to restart."
 
             print(f"Decision matrix response: {ai_msg}")
             # Update session
-            c3.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
+            c3.execute('UPDATE decision_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
             conn3.commit()
             conn3.close()
 
@@ -508,6 +589,64 @@ def on_send_message(data):
             ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'gemini':
             ai_msg = random.choice(general_responses)  # Placeholder
+        elif to_user == 'navigator':
+            # Folder navigation tool
+            import os
+            root = '/home/thomasseitz22/customer_list2'
+            conn_nav = sqlite3.connect('users.db')
+            c_nav = conn_nav.cursor()
+            c_nav.execute('SELECT cwd FROM navigator_sessions WHERE username = ?', (username,))
+            row = c_nav.fetchone()
+            cwd = row[0] if row else ''
+            full_path = os.path.join(root, cwd)
+            cmd = message.strip()
+            if cmd.lower() == 'ls':
+                try:
+                    files = os.listdir(full_path)
+                    items = [f + ('/' if os.path.isdir(os.path.join(full_path, f)) else '') for f in files]
+                    ai_msg = 'Contents:\n' + '\n'.join(items)
+                except Exception as e:
+                    ai_msg = f'Error listing directory: {e}'
+            elif cmd.lower() == 'pwd':
+                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
+            elif cmd.lower() == 'home':
+                cwd = ''
+                ai_msg = 'Returned to root directory.'
+            elif cmd.lower() == 'back':
+                # Go back one directory, same as cd ..
+                dir_name = '..'
+                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+                new_full = os.path.join(root, new_cwd)
+                try:
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+                        cwd = new_cwd
+                        ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+                    else:
+                        ai_msg = 'Cannot go back further (at root).'
+                except:
+                    ai_msg = 'Cannot go back.'
+            elif cmd.lower().startswith('cd '):
+                dir_name = cmd[3:].strip()
+                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+                new_full = os.path.join(root, new_cwd)
+                try:
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+                        cwd = new_cwd
+                        ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+                    else:
+                        ai_msg = 'Invalid directory or access denied'
+                except:
+                    ai_msg = 'Invalid directory'
+            else:
+                ai_msg = 'Commands: ls (list files), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root)'
+            # Update session
+            if row:
+                c_nav.execute('UPDATE navigator_sessions SET cwd = ? WHERE username = ?', (cwd, username))
+            else:
+                c_nav.execute('INSERT INTO navigator_sessions (username, cwd) VALUES (?, ?)', (username, cwd))
+            conn_nav.commit()
+            conn_nav.close()
+
         else:
             return  # Not a pre-programmed chat
 

@@ -142,7 +142,7 @@
         }
         .message {
             font-family: var(--font-family, 'Press Start 2P', monospace);
-            margin-bottom: 10px;
+            margin: 5px 10px 10px 10px;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
@@ -477,7 +477,7 @@
             -webkit-overflow-scrolling: touch;
             font-size: 12px;
             line-height: 1.5;
-                  padding: 10px 215px 490px 5px;
+                  padding: 10px 215px 10px 5px;
             border: 1px solid var(--accent-color, #00ff00);
             border-radius: 10px;
             width: 100%;
@@ -486,7 +486,7 @@
             
         .message {
             font-family: var(--font-family, 'Press Start 2P', monospace);
-            margin-bottom: 10px;
+            margin: 5px 10px 10px 10px;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
@@ -797,10 +797,10 @@
         <button class="back-button" id="back-button">BACK TO PUBLIC</button>
         <div class="messages" id="messages"></div>
         <div class="input-area">
-            <input type="text" id="message-input" placeholder="ENTER MESSAGE">
+            <input type="text" id="message-input" placeholder="ENTER MESSAGE" autocomplete="off">
             <input type="file" id="file-input" style="display: none;">
-            <button id="file-button">📎</button>
-            <button id="send-button">➤</button>
+            <button id="file-button" type="button">📎</button>
+            <button id="send-button" type="button">➤</button>
         </div>
     </div>
     <script>
@@ -816,7 +816,7 @@
         let currentChat = 'public'; // 'public' or username for private
         let allUsers = [];
         let onlineUsers = [];
-        let programUsers = ['grok', 'big_5', 'claude', 'gemini', 'decision_matrix'];
+        let programUsers = ['grok', 'big_5', 'claude', 'gemini', 'decision_matrix', 'navigator'];
         let unreadPrivate = new Set();
 
         document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
@@ -1043,18 +1043,16 @@
                         processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
                     } else if (videoTags.includes(ext)) {
                         processedMsg = processedMsg.replace(url, "<video src='" + url + "' style='max-width: 200px; max-height: 200px;' controls></video><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
-                    } else {
-                        processedMsg = processedMsg.replace(url, "<a href='" + url + "' download='" + filename + "' class='file-link'>" + filename + "</a>");
-                    }
+                     } else {
+                         processedMsg = processedMsg.replace(url, "<a href='" + url + "' target='_blank' class='file-link'>" + filename + "</a>");
+                     }
                 }
             }
             div.innerHTML = processedMsg;
             document.getElementById('messages').appendChild(div);
             if (setScroll) {
                 const messagesEl = document.getElementById('messages');
-                const style = window.getComputedStyle(messagesEl);
-                const paddingBottom = parseInt(style.paddingBottom) || 0;
-                messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - paddingBottom;
+                messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - 450;
             }
         }
 
@@ -1095,8 +1093,9 @@
             setTimeout(() => sendButton.disabled = false, 2000);
         });
 
-        document.getElementById('message-input').addEventListener('keypress', (e) => {
+        document.getElementById('message-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 document.getElementById('send-button').click();
             }
         });
@@ -1121,10 +1120,8 @@
                       });
                       // Apply theme to loaded messages
                       applyTheme(theme);
-                     const messagesEl = document.getElementById('messages');
-                     const style = window.getComputedStyle(messagesEl);
-                     const paddingBottom = parseInt(style.paddingBottom) || 0;
-                     messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - paddingBottom;
+                      const messagesEl = document.getElementById('messages');
+                      messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - 450;
                  });
         }
 
@@ -1210,13 +1207,7 @@
             }
         });
 
-        // Add key listener for resetting theme
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'r' || e.key === 'R') {
-                localStorage.removeItem(`theme_${username}`);
-                location.reload();
-            }
-        });
+
     </script>
 </body>
 </html>
