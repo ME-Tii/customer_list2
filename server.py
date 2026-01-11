@@ -688,8 +688,8 @@ def on_send_message(data):
         conn.close()
         # Emit AI response
         emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
-if not to_user:
-    emit('public_message', {'from': username, 'message': message}, broadcast=True)
+    if not to_user:
+        emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
