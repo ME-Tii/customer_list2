@@ -665,14 +665,14 @@ def on_send_message(data):
                 response = requests.post(
                 "https://router.huggingface.co/v1/chat/completions",
                 headers={"Authorization": f"Bearer {hf_token}"},
-                json={"model": "meta-llama/Llama-3.2-3B-Instruct", "messages": history}, timeout=10
+                json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
                 )
                 data = response.json()
                 try:
                     response = requests.post(
                         "https://router.huggingface.co/v1/chat/completions",
                         headers={"Authorization": f"Bearer {hf_token}"},
-                        json={"model": "meta-llama/Llama-3.2-3B-Instruct", "messages": history}, timeout=10
+                        json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
                     )
                     data = response.json()
                     if "choices" in data:
