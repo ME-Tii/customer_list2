@@ -592,7 +592,7 @@ def on_send_message(data):
         elif to_user == 'navigator':
             # Folder navigation tool
             import os
-            root = '/home/thomasseitz22/customer_list2'
+            root = os.getcwd()
             conn_nav = sqlite3.connect('users.db')
             c_nav = conn_nav.cursor()
             c_nav.execute('SELECT cwd FROM navigator_sessions WHERE username = ?', (username,))
