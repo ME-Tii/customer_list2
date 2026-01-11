@@ -829,9 +829,9 @@
         const theme = savedTheme ? JSON.parse(savedTheme) : { fontFamily: "'Courier New', monospace" };
         function applyTheme(theme) {
             const root = document.documentElement;
-            root.style.setProperty('--text-color', theme.textColor);
-            root.style.setProperty('--bg-color', theme.bgColor);
-            root.style.setProperty('--accent-color', theme.accentColor);
+            root.style.setProperty('--text-color', theme.textColor || '#ffffff');
+            root.style.setProperty('--bg-color', theme.bgColor || '#313030');
+            root.style.setProperty('--accent-color', theme.accentColor || '#5c5c5c');
             root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
             
             // Apply theme to existing elements
