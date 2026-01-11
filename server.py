@@ -5,6 +5,7 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
+import shutil
 import random
 import requests
 
@@ -36,6 +37,11 @@ def init_db():
     columns = [row[1] for row in c.fetchall()]
     if 'read' not in columns:
         c.execute('''ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0''')
+    # Check if copied_file column exists in navigator_sessions table
+    c.execute('''PRAGMA table_info(navigator_sessions)''')
+    columns = [row[1] for row in c.fetchall()]
+    if 'copied_file' not in columns:
+        c.execute('''ALTER TABLE navigator_sessions ADD COLUMN copied_file TEXT DEFAULT ""''')
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
@@ -621,9 +627,10 @@ def on_send_message(data):
             root = os.getcwd()
             conn_nav = sqlite3.connect('users.db')
             c_nav = conn_nav.cursor()
-            c_nav.execute('SELECT cwd FROM navigator_sessions WHERE username = ?', (username,))
+            c_nav.execute('SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
             row = c_nav.fetchone()
             cwd = row[0] if row else ''
+            copied_file = row[1] if row else ''
             full_path = os.path.join(root, cwd)
             cmd = message.strip()
             if cmd.lower() == 'ls':
@@ -717,13 +724,58 @@ def on_send_message(data):
                         ai_msg = 'Cannot create directory outside root'
                 except Exception as e:
                     ai_msg = f'Error creating directory: {e}'
+            elif cmd.lower().startswith('copy '):
+                if username != 'admin':
+                    ai_msg = 'Only admin can use copy command'
+                else:
+                    filename = cmd[5:].strip()
+                    file_path = os.path.join(cwd, filename) if cwd else filename
+                    full_file = os.path.join(root, file_path)
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
+                        copied_file = file_path
+                        ai_msg = f'Copied {filename}'
+                    else:
+                        ai_msg = 'File not found or access denied'
+            elif cmd.lower() == 'paste':
+                if username != 'admin':
+                    ai_msg = 'Only admin can use paste command'
+                else:
+                    if copied_file:
+                        basename = os.path.basename(copied_file)
+                        dest_path = os.path.join(cwd, basename) if cwd else basename
+                        full_dest = os.path.join(root, dest_path)
+                        if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_dest)]) == os.path.abspath(root):
+                            shutil.copy(os.path.join(root, copied_file), full_dest)
+                            ai_msg = f'Pasted {basename}'
+                        else:
+                            ai_msg = 'Cannot paste outside root'
+                    else:
+                        ai_msg = 'No file copied'
+            elif cmd.lower().startswith('delete '):
+                if username != 'admin':
+                    ai_msg = 'Only admin can use delete command'
+                else:
+                    filename = cmd[7:].strip()
+                    file_path = os.path.join(cwd, filename) if cwd else filename
+                    full_file = os.path.join(root, file_path)
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root):
+                        if os.path.isfile(full_file):
+                            os.remove(full_file)
+                            ai_msg = f'Deleted file {filename}'
+                        elif os.path.isdir(full_file):
+                            shutil.rmtree(full_file)
+                            ai_msg = f'Deleted directory {filename}'
+                        else:
+                            ai_msg = 'File or directory not found'
+                    else:
+                        ai_msg = 'Cannot delete outside root'
             else:
-                 ai_msg = 'Commands: ls (list files visually), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root), open <file> (open file), read <file> (display file content with scrollbar), mkdir <dir> (create directory)'
+                 ai_msg = 'Commands: ls (list files visually), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root), open <file> (open file), read <file> (display file content with scrollbar), mkdir <dir> (create directory), copy <file> (copy file - admin only), paste (paste copied file - admin only), delete <file> (delete file/dir - admin only)'
             # Update session
             if row:
-                c_nav.execute('UPDATE navigator_sessions SET cwd = ? WHERE username = ?', (cwd, username))
+                c_nav.execute('UPDATE navigator_sessions SET cwd = ?, copied_file = ? WHERE username = ?', (cwd, copied_file, username))
             else:
-                c_nav.execute('INSERT INTO navigator_sessions (username, cwd) VALUES (?, ?)', (username, cwd))
+                c_nav.execute('INSERT INTO navigator_sessions (username, cwd, copied_file) VALUES (?, ?, ?)', (username, cwd, copied_file))
             conn_nav.commit()
             conn_nav.close()
             print("Navigator responding with", repr(ai_msg[:50]) if ai_msg else "None")
