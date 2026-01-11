@@ -90,7 +90,7 @@ def chat_page():
 def get_users():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('SELECT username FROM users')
+    c.execute('SELECT username FROM users WHERE verified = 1')
     users = [row[0] for row in c.fetchall()]
     conn.close()
     return jsonify(users)
