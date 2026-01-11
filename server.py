@@ -676,7 +676,7 @@ def on_send_message(data):
                     )
                     data = response.json()
                     if "choices" in data:
-                        ai_reply = data["choices"][0]["message"]["content"]
+                        ai_reply = data["choices"][0]["message"].get("content", "No response from AI")
                     else:
                         ai_reply = f"API error: {data.get('error', 'Unknown error')}"
                 except Exception as e:
