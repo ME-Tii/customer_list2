@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
+import html
+from urllib.parse import quote
 from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 import sqlite3
@@ -129,7 +131,7 @@ def serve_uploads_dir():
     return html
 
 @app.route('/icons/<path:filename>')
-def serve_icons(filename):
+def serve_icon(filename):
     return send_from_directory('icons', filename)
 
 @app.route('/icons')
@@ -142,6 +144,16 @@ def serve_icons_dir():
     html += '</ul>'
     return html
 
+@app.route('/navigator_file/<path:filepath>')
+def serve_navigator_file(filepath):
+    import os
+    root = os.getcwd()
+    full_path = os.path.join(root, filepath)
+    # Ensure the path is within the root directory
+    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_path)]) == os.path.abspath(root):
+        return send_file(full_path)
+    else:
+        return 'Access denied', 403
 
 @app.route('/test_route')
 def test_route():
@@ -149,48 +161,57 @@ def test_route():
 
 @app.route('/messages')
 def get_messages():
-    username = request.args.get('username')
-    to_user = request.args.get('to')
-    from_user = request.args.get('from')
-    admin_user = request.args.get('admin_user')  # New parameter for admin request
-    
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    
-    if admin_user:
-        # Admin requesting all messages from a specific user
-        c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
-        rows = c.fetchall()
-        messages = []
-        for row in rows:
-            messages.append({
-                'from': row[0], 
-                'to': row[1] if row[1] else 'Public', 
-                'message': row[2], 
-                'timestamp': row[3]
-            })
-    elif from_user:
-        # Get all messages from a specific user (both public and private)
-        c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
-        rows = c.fetchall()
-        messages = []
-        for row in rows:
-            messages.append({
-                'from': row[0], 
-                'to': row[1] if row[1] else 'Public', 
-                'message': row[2], 
-                'timestamp': row[3]
-            })
-    elif to_user:
-        c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp', (username, to_user, to_user, username))
-        messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
-        # Mark messages as read
-        c.execute('UPDATE messages SET read = 1 WHERE from_user = ? AND to_user = ? AND read = 0', (to_user, username))
-    else:
-        c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
-        messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in c.fetchall()]
-    conn.close()
-    return jsonify(messages)
+    try:
+        username = request.args.get('username')
+        to_user = request.args.get('to')
+        from_user = request.args.get('from')
+        admin_user = request.args.get('admin_user')  # New parameter for admin request
+        
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        
+        if admin_user:
+            # Admin requesting all messages from a specific user
+            c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
+            rows = c.fetchall()
+            messages = []
+            for row in rows:
+                messages.append({
+                    'from': row[0], 
+                    'to': row[1] if row[1] else 'Public', 
+                    'message': row[2], 
+                    'timestamp': row[3]
+                })
+        elif from_user:
+            # Get all messages from a specific user (both public and private)
+            c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
+            rows = c.fetchall()
+            messages = []
+            for row in rows:
+                messages.append({
+                    'from': row[0], 
+                    'to': row[1] if row[1] else 'Public', 
+                    'message': row[2], 
+                    'timestamp': row[3]
+                })
+        elif to_user:
+            c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp', (username, to_user, to_user, username))
+            rows = c.fetchall()
+            messages = []
+            for row in rows:
+                messages.append({'from': row[0], 'message': row[1], 'timestamp': row[2]})
+            # Mark messages as read
+            c.execute('UPDATE messages SET read = 1 WHERE from_user = ? AND to_user = ? AND read = 0', (to_user, username))
+        else:
+            c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
+            rows = c.fetchall()
+            messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in rows]
+
+        conn.close()
+        return jsonify(messages)
+    except Exception as e:
+        print(f"Error in get_messages: {e}")
+        return jsonify([])
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -394,6 +415,8 @@ def on_send_message(data):
             "Let's chat more."
         ]
 
+        ai_msg = None
+
         programms_responses = [
             "That's a solid algorithm!",
             "Have you tried debugging?",
@@ -592,6 +615,7 @@ def on_send_message(data):
         elif to_user == 'gemini':
             ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'navigator':
+            print("Navigator command from", username, ":", message)
             # Folder navigation tool
             import os
             root = os.getcwd()
@@ -605,8 +629,21 @@ def on_send_message(data):
             if cmd.lower() == 'ls':
                 try:
                     files = os.listdir(full_path)
-                    items = [f + ('/' if os.path.isdir(os.path.join(full_path, f)) else '') for f in files]
-                    ai_msg = 'Contents:\n' + '\n'.join(items)
+                    output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
+                    for f in files:
+                        f_path = os.path.join(cwd, f) if cwd else f
+                        escaped_f = html.escape(f)
+                        if os.path.isdir(os.path.join(full_path, f)):
+                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
+                        else:
+                            ext = f.split('.')[-1].lower() if '.' in f else ''
+                            if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                                img_url = '/navigator_file/' + quote(f_path)
+                                output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + escaped_f + '</span></div>'
+                            else:
+                                output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + escaped_f + '</span></div>'
+                    output_html += '</div>'
+                    ai_msg = output_html
                 except Exception as e:
                     ai_msg = f'Error listing directory: {e}'
             elif cmd.lower() == 'pwd':
@@ -639,15 +676,57 @@ def on_send_message(data):
                         ai_msg = 'Invalid directory or access denied'
                 except:
                     ai_msg = 'Invalid directory'
+            elif cmd.lower().startswith('open '):
+                filename = cmd[5:].strip()
+                file_path = os.path.join(cwd, filename) if cwd else filename
+                full_file = os.path.join(root, file_path)
+                try:
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
+                        url = f'/navigator_file/{file_path}'
+                        ext = filename.split('.')[-1].lower() if '.' in filename else ''
+                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
+                        else:
+                            ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
+                    else:
+                        ai_msg = 'File not found or access denied'
+                except:
+                    ai_msg = 'Error opening file'
+            elif cmd.lower().startswith('read '):
+                 filename = cmd[5:].strip()
+                 file_path = os.path.join(cwd, filename) if cwd else filename
+                 full_file = os.path.join(root, file_path)
+                 try:
+                     if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
+                         with open(full_file, 'r', encoding='utf-8') as f:
+                             content = f.read(10000)
+                         ai_msg = f'<div style="max-height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;"><pre>{html.escape(content)}</pre></div>'
+                     else:
+                         ai_msg = 'File not found or access denied'
+                 except Exception as e:
+                     ai_msg = f'Error reading file: {e}'
+            elif cmd.lower().startswith('mkdir '):
+                dirname = cmd[6:].strip()
+                new_dir_path = os.path.join(cwd, dirname) if cwd else dirname
+                full_new_dir = os.path.join(root, new_dir_path)
+                try:
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_new_dir)]) == os.path.abspath(root):
+                        os.makedirs(full_new_dir, exist_ok=True)
+                        ai_msg = f'Directory {dirname} created.'
+                    else:
+                        ai_msg = 'Cannot create directory outside root'
+                except Exception as e:
+                    ai_msg = f'Error creating directory: {e}'
             else:
-                ai_msg = 'Commands: ls (list files), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root)'
+                 ai_msg = 'Commands: ls (list files visually), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root), open <file> (open file), read <file> (display file content with scrollbar), mkdir <dir> (create directory)'
             # Update session
             if row:
                 c_nav.execute('UPDATE navigator_sessions SET cwd = ? WHERE username = ?', (cwd, username))
             else:
                 c_nav.execute('INSERT INTO navigator_sessions (username, cwd) VALUES (?, ?)', (username, cwd))
-                conn_nav.commit()
-                conn_nav.close()
+            conn_nav.commit()
+            conn_nav.close()
+            print("Navigator responding with", repr(ai_msg[:50]) if ai_msg else "None")
 
     elif to_user == 'hf_ai':
         hf_token = os.environ.get('HF_TOKEN')
@@ -692,7 +771,8 @@ def on_send_message(data):
                     
     else:
         ai_msg = "Unknown bot"
-                    
+
+    if ai_msg:
         # Store AI response
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
@@ -700,7 +780,7 @@ def on_send_message(data):
         conn.commit()
         conn.close()
         # Emit AI response
-        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, broadcast=True)
+        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
     if not to_user:
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
