@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import os
 import random
+import requests
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -26,6 +27,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS big5_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
     c.execute('''CREATE TABLE IF NOT EXISTS decision_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
     c.execute('''CREATE TABLE IF NOT EXISTS navigator_sessions (username TEXT PRIMARY KEY, cwd TEXT DEFAULT '')''')
+    c.execute('''CREATE TABLE IF NOT EXISTS ai_conversations (username TEXT PRIMARY KEY, messages TEXT DEFAULT '[]', updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
     
     # Check if read column exists in messages table
     c.execute('''PRAGMA table_info(messages)''')
@@ -644,20 +646,48 @@ def on_send_message(data):
                 c_nav.execute('UPDATE navigator_sessions SET cwd = ? WHERE username = ?', (cwd, username))
             else:
                 c_nav.execute('INSERT INTO navigator_sessions (username, cwd) VALUES (?, ?)', (username, cwd))
-            conn_nav.commit()
-            conn_nav.close()
+             conn_nav.commit()
+             conn_nav.close()
 
-        else:
-            return  # Not a pre-programmed chat
+         elif to_user == 'hf_ai':
+             hf_token = os.environ.get('HF_TOKEN')
+             if not hf_token:
+                 ai_msg = "AI not configured."
+             else:
+                 conn_ai = sqlite3.connect('users.db')
+                 c_ai = conn_ai.cursor()
+                 c_ai.execute('SELECT messages FROM ai_conversations WHERE username = ?', (username,))
+                 row = c_ai.fetchone()
+                 history = eval(row[0]) if row else []
+                 history.append({"role": "user", "content": message})
+                 history = history[-10:]  # Keep last 10
+                 try:
+                     response = requests.post(
+                         "https://router.huggingface.co/v1/chat/completions",
+                         headers={"Authorization": f"Bearer {hf_token}"},
+                         json={"model": "deepseek-ai/DeepSeek-R1:fastest", "messages": history}
+                     )
+                     data = response.json()
+                     ai_reply = data["choices"][0]["message"]["content"]
+                     history.append({"role": "assistant", "content": ai_reply})
+                     c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
+                     conn_ai.commit()
+                     ai_msg = ai_reply
+                 except Exception as e:
+                     ai_msg = "Sorry, AI service unavailable."
+                 conn_ai.close()
 
-        # Store AI response
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (to_user, username, ai_msg))
-        conn.commit()
-        conn.close()
-        # Emit AI response
-        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
+         else:
+             return  # Not a pre-programmed chat
+
+         # Store AI response
+         conn = sqlite3.connect('users.db')
+         c = conn.cursor()
+         c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (to_user, username, ai_msg))
+         conn.commit()
+         conn.close()
+         # Emit AI response
+         emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
     else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
