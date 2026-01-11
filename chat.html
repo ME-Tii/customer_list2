@@ -224,7 +224,7 @@
         .input-area input[type="file"]:hover {
             background-color: #33ff33;
         }
-        .input-area         button {
+        .input-area button {
             background-color: var(--accent-color, #00ff00);
             color: var(--bg-color, #000);
             border: none;
@@ -235,6 +235,21 @@
             text-transform: uppercase;
             margin-left: 8px;
             height: 35px;
+        }
+        #voice-button {
+            background-color: var(--accent-color, #00ff00);
+            color: var(--bg-color, #000);
+            border: none;
+            padding: 6px 12px !important;
+            cursor: pointer;
+            font-family: var(--font-family, 'Press Start 2P', monospace);
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 8px;
+            height: 35px;
+        }
+        #voice-button.listening {
+            background-color: #ff0000;
         }
         
         #file-button {
@@ -803,6 +818,7 @@
             <input type="text" id="message-input" placeholder="ENTER MESSAGE" autocomplete="off">
             <input type="file" id="file-input" style="display: none;">
             <button id="file-button" type="button">📎</button>
+            <button id="voice-button" type="button">🎤</button>
             <button id="send-button" type="button">➤</button>
         </div>
     </div>
@@ -1155,6 +1171,47 @@
         document.getElementById('file-button').addEventListener('click', () => {
             document.getElementById('file-input').click();
         });
+
+        // Speech recognition
+        const voiceButton = document.getElementById('voice-button');
+        let recognition;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                voiceButton.classList.add('listening');
+                voiceButton.textContent = '🎤🔴';
+            };
+
+            recognition.onend = () => {
+                voiceButton.classList.remove('listening');
+                voiceButton.textContent = '🎤';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('message-input').value += transcript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+            };
+
+            voiceButton.addEventListener('click', () => {
+                if (voiceButton.classList.contains('listening')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        } else {
+            voiceButton.disabled = true;
+            voiceButton.textContent = '❌';
+        }
 
         document.getElementById('logout-button').addEventListener('click', () => {
             socket.emit('leave', { username });
