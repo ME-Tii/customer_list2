@@ -1055,7 +1055,7 @@
             document.getElementById('messages').appendChild(div);
             if (setScroll) {
                 const messagesEl = document.getElementById('messages');
-                messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - 450;
+                messagesEl.scrollTop = messagesEl.scrollHeight;
             }
         }
 
@@ -1124,7 +1124,7 @@
                       // Apply theme to loaded messages
                       applyTheme(theme);
                       const messagesEl = document.getElementById('messages');
-                      messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight - 450;
+                      messagesEl.scrollTop = messagesEl.scrollHeight;
                  });
         }
 
