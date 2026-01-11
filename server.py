@@ -665,14 +665,14 @@ def on_send_message(data):
                 response = requests.post(
                 "https://router.huggingface.co/v1/chat/completions",
                 headers={"Authorization": f"Bearer {hf_token}"},
-                json={"model": "microsoft/DialoGPT-medium", "messages": history}
+                json={"model": "deepseek-ai/DeepSeek-R1:fastest", "messages": history}
                 )
                 data = response.json()
                 try:
                     response = requests.post(
                         "https://router.huggingface.co/v1/chat/completions",
                         headers={"Authorization": f"Bearer {hf_token}"},
-                        json={"model": "microsoft/DialoGPT-medium", "messages": history}
+                        json={"model": "deepseek-ai/DeepSeek-R1:fastest", "messages": history}
                     )
                     data = response.json()
                     if "choices" in data:
