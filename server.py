@@ -678,7 +678,7 @@ def on_send_message(data):
             conn_ai.close()
                     
     else:
-        return  # Not a pre-programmed chat
+        ai_msg = "Unknown bot"
                     
         # Store AI response
         conn = sqlite3.connect('users.db')
@@ -688,9 +688,8 @@ def on_send_message(data):
         conn.close()
         # Emit AI response
         emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
-    else:
-        # Public message
-        emit('public_message', {'from': username, 'message': message}, broadcast=True)
+if not to_user:
+    emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
