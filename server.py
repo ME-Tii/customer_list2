@@ -668,7 +668,19 @@ def on_send_message(data):
                 json={"model": "microsoft/DialoGPT-medium", "messages": history}
                 )
                 data = response.json()
-                ai_reply = "Test response from AI"
+                try:
+                    response = requests.post(
+                        "https://router.huggingface.co/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {hf_token}"},
+                        json={"model": "microsoft/DialoGPT-medium", "messages": history}
+                    )
+                    data = response.json()
+                    if "choices" in data:
+                        ai_reply = data["choices"][0]["message"]["content"]
+                    else:
+                        ai_reply = f"API error: {data.get('error', 'Unknown error')}"
+                except Exception as e:
+                    ai_msg = "Sorry, AI service unavailable."
                 history.append({"role": "assistant", "content": ai_reply})
                 c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
                 conn_ai.commit()
