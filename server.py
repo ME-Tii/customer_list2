@@ -8,6 +8,7 @@ import os
 import shutil
 import random
 import requests
+import json
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -31,6 +32,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS decision_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
     c.execute('''CREATE TABLE IF NOT EXISTS navigator_sessions (username TEXT PRIMARY KEY, cwd TEXT DEFAULT '')''')
     c.execute('''CREATE TABLE IF NOT EXISTS ai_conversations (username TEXT PRIMARY KEY, messages TEXT DEFAULT '[]', updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS snake_sessions (username TEXT PRIMARY KEY, board TEXT, snake TEXT, direction TEXT, food TEXT, score INTEGER DEFAULT 0, game_over INTEGER DEFAULT 0)''')
     
     # Check if read column exists in messages table
     c.execute('''PRAGMA table_info(messages)''')
@@ -55,6 +57,17 @@ def init_db():
     os.makedirs('uploads', exist_ok=True)
 
 init_db()
+
+def render_board(board, snake, food):
+    b = [row[:] for row in board]
+    for x, y in snake:
+        if [x, y] == snake[0]:
+            b[y][x] = '🐍'
+        else:
+            b[y][x] = '🟢'
+    fx, fy = food
+    b[fy][fx] = '🍎'
+    return '\n'.join(''.join(row) for row in b)
 
 online_users = set()
 
@@ -780,7 +793,97 @@ def on_send_message(data):
             conn_nav.close()
             print("Navigator responding with", repr(ai_msg[:50]) if ai_msg else "None")
 
-    elif to_user == 'hf_ai':
+        elif to_user == 'snake':
+            conn_snake = sqlite3.connect('users.db')
+               c_snake = conn_snake.cursor()
+               c_snake.execute('SELECT board, snake, direction, food, score, game_over FROM snake_sessions WHERE username = ?', (username,))
+               row = c_snake.fetchone()
+               if row:
+                   board_str, snake_str, direction, food_str, score, game_over = row
+                   board = json.loads(board_str)
+                   snake = json.loads(snake_str)
+                   food = json.loads(food_str)
+               else:
+                   # Init game
+                   width, height = 10, 10
+                   board = [['.' for _ in range(width)] for _ in range(height)]
+                   snake = [[width//2, height//2]]
+                   direction = 'right'
+                   food = [random.randint(0, width-1), random.randint(0, height-1)]
+                   score = 0
+                   game_over = 0
+                   c_snake.execute('INSERT INTO snake_sessions (username, board, snake, direction, food, score, game_over) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                   (username, json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over))
+   
+               if game_over:
+                   if message.lower() == 'start':
+                       # Reset
+                       width, height = 10, 10
+                       board = [['.' for _ in range(width)] for _ in range(height)]
+                       snake = [[width//2, height//2]]
+                       direction = 'right'
+                       food = [random.randint(0, width-1), random.randint(0, height-1)]
+                       score = 0
+                       game_over = 0
+                       c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+                                       (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+                       ai_msg = 'New game started!\n' + render_board(board, snake, food)
+                   else:
+                       ai_msg = f'Game over! Score: {score}. Send "start" to play again.'
+               else:
+                   # Process move
+                   move = message.lower().strip()
+                   new_dir = None
+                   if move in ['up', 'w']:
+                       new_dir = 'up'
+                   elif move in ['down', 's']:
+                       new_dir = 'down'
+                   elif move in ['left', 'a']:
+                       new_dir = 'left'
+                   elif move in ['right', 'd']:
+                       new_dir = 'right'
+                   else:
+                       ai_msg = 'Invalid move. Use w/a/s/d or up/down/left/right.'
+   
+                   if new_dir:
+                       # Update direction if not opposite
+                       opposites = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
+                       if new_dir != opposites.get(direction):
+                           direction = new_dir
+                       # Move snake
+                       head = snake[0].copy()
+                       if direction == 'up':
+                           head[1] -= 1
+                       elif direction == 'down':
+                           head[1] += 1
+                       elif direction == 'left':
+                           head[0] -= 1
+                       elif direction == 'right':
+                           head[0] += 1
+                       # Check walls
+                       if head[0] < 0 or head[0] >= len(board[0]) or head[1] < 0 or head[1] >= len(board):
+                           game_over = 1
+                           ai_msg = f'Game over! Hit wall. Score: {score}. Send "start" to play again.'
+                       # Check self
+                       elif head in snake:
+                           game_over = 1
+                           ai_msg = f'Game over! Hit self. Score: {score}. Send "start" to play again.'
+                       else:
+                           snake.insert(0, head)
+                           if head == food:
+                               score += 1
+                               food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+                               while food in snake:
+                                   food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+                           else:
+                               snake.pop()
+                           ai_msg = f'Score: {score}\n' + render_board(board, snake, food)
+                       c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+                                       (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+               conn_snake.commit()
+               conn_snake.close()
+   
+        elif to_user == 'hf_ai':
         hf_token = os.environ.get('HF_TOKEN')
         if not hf_token:
             ai_msg = "AI not configured."
