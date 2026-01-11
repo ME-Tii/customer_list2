@@ -673,9 +673,10 @@ def on_send_message(data):
                 c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
                 conn_ai.commit()
                 ai_msg = ai_reply
+                print("AI responding with:", ai_msg)
             except:
                 ai_msg = "Sorry, AI service unavailable."
-                conn_ai.close()
+            conn_ai.close()
                     
     else:
         ai_msg = "Unknown bot"
