@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Settings</title>
     <style>
-        body {
-            font-family: var(--font-family, 'Courier New', monospace);
-            background-color: var(--bg-color, #000);
-            color: var(--text-color, #00ff00);
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-shadow: 0 0 5px var(--accent-color, #00ff00);
-            color: var(--text-color, #00ff00);
-        }
+            body {
+                font-family: var(--font-family, 'Courier New', monospace);
+                background-color: var(--bg-color, #313030);
+                color: var(--text-color, #ffffff);
+                margin: 0;
+                padding: 20px;
+            }
+            h1 {
+                text-shadow: 0 0 5px var(--accent-color, #5c5c5c);
+                color: var(--text-color, #ffffff);
+            }
         .section {
             margin-bottom: 30px;
             border: 1px solid var(--accent-color, #00ff00);
@@ -359,21 +359,21 @@
     
     <div class="section">
         <h2>THEME SETTINGS</h2>
-        <div class="form-group">
-            <label for="text-color">Text Color</label>
-             <input type="color" id="text-color" value="#ffffff">
-            <span class="theme-preview" id="text-preview" style="background-color: #00ff00;"></span>
-        </div>
-        <div class="form-group">
-            <label for="bg-color">Background Color</label>
-            <input type="color" id="bg-color" value="#000000">
-            <span class="theme-preview" id="bg-preview" style="background-color: #000000;"></span>
-        </div>
-        <div class="form-group">
-            <label for="accent-color">Accent Color</label>
-             <input type="color" id="accent-color" value="#ff0000">
-            <span class="theme-preview" id="accent-preview" style="background-color: #00ff00;"></span>
-        </div>
+         <div class="form-group">
+             <label for="text-color">Text Color</label>
+              <input type="color" id="text-color" value="#ffffff">
+             <span class="theme-preview" id="text-preview" style="background-color: #ffffff;"></span>
+         </div>
+         <div class="form-group">
+             <label for="bg-color">Background Color</label>
+             <input type="color" id="bg-color" value="#313030">
+             <span class="theme-preview" id="bg-preview" style="background-color: #313030;"></span>
+         </div>
+         <div class="form-group">
+             <label for="accent-color">Accent Color</label>
+              <input type="color" id="accent-color" value="#5c5c5c">
+             <span class="theme-preview" id="accent-preview" style="background-color: #5c5c5c;"></span>
+         </div>
         <div class="form-group">
             <label for="font-select">Font Family</label>
             <select id="font-select">
@@ -405,9 +405,9 @@
 
         function applyTheme(theme) {
             const root = document.documentElement;
-            root.style.setProperty('--text-color', theme.textColor || '#00ff00');
-            root.style.setProperty('--bg-color', theme.bgColor || '#000000');
-            root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
+            root.style.setProperty('--text-color', theme.textColor || '#ffffff');
+            root.style.setProperty('--bg-color', theme.bgColor || '#313030');
+            root.style.setProperty('--accent-color', theme.accentColor || '#5c5c5c');
             root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
         }
 
@@ -427,13 +427,13 @@
         function resetTheme() {
             localStorage.removeItem(`theme_${username}`);
             document.getElementById('text-color').value = '#ffffff';
-            document.getElementById('bg-color').value = '#000000';
-            document.getElementById('accent-color').value = '#ff0000';
+            document.getElementById('bg-color').value = '#313030';
+            document.getElementById('accent-color').value = '#5c5c5c';
             document.getElementById('font-select').value = "'Courier New', monospace";
             const root = document.documentElement;
             root.style.setProperty('--text-color', '#ffffff');
-            root.style.setProperty('--bg-color', '#000000');
-            root.style.setProperty('--accent-color', '#ff0000');
+            root.style.setProperty('--bg-color', '#313030');
+            root.style.setProperty('--accent-color', '#5c5c5c');
             root.style.setProperty('--font-family', "'Courier New', monospace");
             alert('Theme reset to default');
         }
@@ -444,8 +444,8 @@
         const savedTheme = localStorage.getItem(`theme_${username}`);
         const theme = savedTheme ? JSON.parse(savedTheme) : {};
         document.getElementById('text-color').value = theme.textColor || '#ffffff';
-        document.getElementById('bg-color').value = theme.bgColor || '#000000';
-        document.getElementById('accent-color').value = theme.accentColor || '#ff0000';
+        document.getElementById('bg-color').value = theme.bgColor || '#313030';
+        document.getElementById('accent-color').value = theme.accentColor || '#5c5c5c';
         document.getElementById('font-select').value = theme.fontFamily || "'Courier New', monospace";
         applyTheme(theme);
         updatePreviews();
@@ -500,9 +500,9 @@
         
         function applyTheme(theme) {
             const root = document.documentElement;
-            root.style.setProperty('--text-color', theme.textColor || '#00ff00');
-            root.style.setProperty('--bg-color', theme.bgColor || '#000000');
-            root.style.setProperty('--accent-color', theme.accentColor || '#00ff00');
+            root.style.setProperty('--text-color', theme.textColor || '#ffffff');
+            root.style.setProperty('--bg-color', theme.bgColor || '#313030');
+            root.style.setProperty('--accent-color', theme.accentColor || '#5c5c5c');
             root.style.setProperty('--font-family', theme.fontFamily || "'Courier New', monospace");
         }
 
