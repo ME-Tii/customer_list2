@@ -665,7 +665,7 @@ def on_send_message(data):
                 response = requests.post(
                 "https://router.huggingface.co/v1/chat/completions",
                 headers={"Authorization": f"Bearer {hf_token}"},
-                json={"model": "deepseek-ai/DeepSeek-R1:fastest", "messages": history}
+                json={"model": "microsoft/DialoGPT-medium", "messages": history}
                 )
                 data = response.json()
                 ai_reply = data["choices"][0]["message"]["content"]
@@ -673,9 +673,9 @@ def on_send_message(data):
                 c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
                 conn_ai.commit()
                 ai_msg = ai_reply
-            except Exception as e:
+                except Exception as e:
                 ai_msg = "Sorry, AI service unavailable."
-            conn_ai.close()
+                conn_ai.close()
                     
     else:
         ai_msg = "Unknown bot"
