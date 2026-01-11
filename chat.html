@@ -1090,6 +1090,7 @@
                 fileInput.value = '';
             }
             if (message) {
+                console.log('Sending message:', message, 'to:', currentChat === 'public' ? null : currentChat);
                 socket.emit('send_message', { username, message, to: currentChat === 'public' ? null : currentChat });
                 document.getElementById('message-input').value = '';
             }
