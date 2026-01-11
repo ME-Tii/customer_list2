@@ -673,7 +673,7 @@ def on_send_message(data):
                 c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
                 conn_ai.commit()
                 ai_msg = ai_reply
-                except Exception as e:
+            except:
                 ai_msg = "Sorry, AI service unavailable."
                 conn_ai.close()
                     
