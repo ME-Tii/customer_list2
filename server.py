@@ -680,15 +680,15 @@ def on_send_message(data):
     else:
         return  # Not a pre-programmed chat
                     
-    # Store AI response
-# Store AI response
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (to_user, username, ai_msg))
-    conn.commit()
-    conn.close()
-    # Emit AI response
-    emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
+        # Store AI response
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (to_user, username, ai_msg))
+        conn.commit()
+        conn.close()
+        # Emit AI response
+        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=username)
+    else:
         # Public message
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
