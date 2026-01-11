@@ -668,7 +668,7 @@ def on_send_message(data):
                 json={"model": "microsoft/DialoGPT-medium", "messages": history}
                 )
                 data = response.json()
-                ai_reply = data["choices"][0]["message"]["content"]
+                ai_reply = "Test response from AI"
                 history.append({"role": "assistant", "content": ai_reply})
                 c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
                 conn_ai.commit()
