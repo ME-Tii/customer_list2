@@ -700,7 +700,7 @@ def on_send_message(data):
         conn.commit()
         conn.close()
         # Emit AI response
-        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, to=request.sid)
+        emit('private_message', {'from': to_user, 'message': ai_msg, 'to': username}, broadcast=True)
     if not to_user:
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
