@@ -788,10 +788,10 @@ def on_send_message(data):
                     if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
                         url = f'/navigator_file/{file_path}'
                         ext = filename.split('.')[-1].lower() if '.' in filename else ''
-                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
-                        else:
-                            ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
+                if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                    ai_msg = f'Image: {url}'
+                else:
+                    ai_msg = f'File: {url}'
                 except:
                     ai_msg = 'Error opening file'
         if False:  # elif to_user == 'snake':
