@@ -794,8 +794,8 @@ def on_send_message(data):
                         ai_msg = f'Image: {url}'
                     else:
                         ai_msg = f'File: {url}'
-                    except:
-                        ai_msg = 'Error opening file'
+                except:
+                    ai_msg = 'Error opening file'
         if False:  # elif to_user == 'snake':
             pass
 #              conn_snake = sqlite3.connect('users.db')
