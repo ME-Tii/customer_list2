@@ -769,6 +769,8 @@ def on_send_message(data):
                     ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
                 else:
                     ai_msg = 'Cannot go back further (at root).'
+            elif cmd.lower() == 'pwd':
+                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
             elif cmd.lower().startswith('cd '):
                 dir_name = cmd[3:].strip()
                 new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
