@@ -771,6 +771,8 @@ def on_send_message(data):
                     ai_msg = 'Cannot go back further (at root).'
             elif cmd.lower() == 'pwd':
                 ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
+            elif cmd.lower() == 'help':
+                ai_msg = 'Available commands: ls, pwd, cd <dir>, open <file>'
             elif cmd.lower().startswith('cd '):
                 dir_name = cmd[3:].strip()
                 new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
@@ -792,6 +794,8 @@ def on_send_message(data):
                     ai_msg = f'Image: {url}'
                 else:
                     ai_msg = f'File: {url}'
+            else:
+                ai_msg = 'Invalid command. Type "help" for available commands.'
                 except:
                     ai_msg = 'Error opening file'
         if False:  # elif to_user == 'snake':
