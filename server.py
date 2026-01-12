@@ -65,8 +65,8 @@ def init_db():
               ('claude', 'claude', 1))
     c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
               ('gemini', 'gemini', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
-              ('snake', 'snake', 0))
+#    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+#              ('snake', 'snake', 0))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
