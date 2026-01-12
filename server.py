@@ -725,39 +725,15 @@ def on_send_message(data):
             # Folder navigation tool
             import os
             root = os.getcwd()
-            conn_nav = sqlite3.connect('users.db')
-            c_nav = conn_nav.cursor()
-            c_nav.execute(
-                'SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
-            row = c_nav.fetchone()
-            cwd = row[0] if row else ''
-            copied_file = row[1] if row else ''
-            full_path = os.path.join(root, cwd)
-            cmd = message.strip()
-            if cmd.lower() == 'ls':
-                files = os.listdir(full_path)
-                output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
-                for f in files:
-                    f_path = os.path.join(cwd, f) if cwd else f
-                    escaped_f = html.escape(f)
-                    if os.path.isdir(os.path.join(full_path, f)):
-                        output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
-                    else:
-                        ext = f.split('.')[-1].lower() if '.' in f else ''
-                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                            img_url = '/navigator_file/' + quote(f_path)
-                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + \
-                                '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + \
-                                    escaped_f + '</span></div>'
-                        else:
-                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + \
-                                escaped_f + '</span></div>'
-                output_html += '</div>'
-                ai_msg = output_html
-            elif cmd.lower() == 'pwd':
-                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
-            elif cmd.lower() == 'home':
-                cwd = ''
+    conn_nav = sqlite3.connect('users.db')
+    c_nav = conn_nav.cursor()
+    c_nav.execute('SELECT cwd FROM navigator_sessions WHERE username = ?', (username,))
+    row = c_nav.fetchone()
+    if row:
+        cwd = row[0]
+    else:
+        cwd = ''
+    ai_msg = f'Debug: Username: {username}, Cwd: {cwd}'
                 ai_msg = 'Returned to root directory.'
             elif cmd.lower() == 'back':
                 # Go back one directory, same as cd ..
@@ -839,7 +815,7 @@ def on_send_message(data):
 #              c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
 #              (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
 #              ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
-#          else:
+    else:
 #              ai_msg = 'Game over! Score: ' + str(score) + '. Send "start" to play again.'
 #      else:
 #              # Grow snake
@@ -913,10 +889,14 @@ def on_send_message(data):
     if not to_user:
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
-# Remove snake user
+# Remove snake user and ensure navigator_sessions table exists
 conn = sqlite3.connect('users.db')
 c = conn.cursor()
 c.execute('DELETE FROM users WHERE username = ?', ('snake',))
+c.execute('''CREATE TABLE IF NOT EXISTS navigator_sessions (
+username TEXT PRIMARY KEY,
+cwd TEXT
+)''')
 conn.commit()
 conn.close()
 
