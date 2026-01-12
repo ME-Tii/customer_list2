@@ -798,6 +798,7 @@
         </div>
         <h2 class="chat-title" id="chat-title">PUBLIC CHAT</h2>
         <button class="back-button" id="back-button">BACK TO PUBLIC</button>
+        <canvas id="snake-canvas" style="display:none; border:1px solid black; max-width:100%;"></canvas>
         <div class="messages" id="messages"></div>
         <div class="input-area">
             <input type="text" id="message-input" placeholder="ENTER MESSAGE" autocomplete="off">
@@ -819,8 +820,73 @@
         let currentChat = 'public'; // 'public' or username for private
         let allUsers = [];
         let onlineUsers = [];
-        let programUsers = ['grok', 'big_5', 'claude', 'gemini', 'decision_matrix', 'navigator', 'hf_ai'];
+        let programUsers = ['grok', 'big_5', 'claude', 'gemini', 'decision_matrix', 'navigator', 'hf_ai', 'snake'];
         let unreadPrivate = new Set();
+
+        const canvas = document.getElementById('snake-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawSnakeGame(data) {
+            const {board, snake, food, score, game_over} = data;
+            const cellSize = canvas.width / 10;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw board background
+            const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background-color') || '#ffffff';
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food[0] * cellSize, food[1] * cellSize, cellSize, cellSize);
+            // Draw snake
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment[0] * cellSize, segment[1] * cellSize, cellSize, cellSize);
+            });
+            // Draw score
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color') || '#000000';
+            ctx.fillStyle = textColor;
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+            if (game_over) {
+                ctx.fillStyle = 'red';
+                ctx.font = '30px Arial';
+                ctx.fillText('Game Over', canvas.width / 2 - 60, canvas.height / 2);
+            }
+        }
+
+
+
+        document.addEventListener('keydown', (e) => {
+            if (canvas.style.display !== 'none' && document.activeElement !== document.getElementById('message-input')) {
+                let dir = '';
+                switch (e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        dir = 'up';
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        dir = 'down';
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        dir = 'left';
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        dir = 'right';
+                        break;
+                }
+                if (dir) {
+                    socket.emit('send_message', { username, message: dir, to: 'snake' });
+                    e.preventDefault();
+                }
+            }
+        });
 
         document.getElementById('user-info').textContent = 'LOGGED IN AS: ' + username.toUpperCase();
         
@@ -1034,21 +1100,24 @@
                 div.className = 'message';
             }
             var processedMsg = msg;
-            var parts = msg.split(' ');
-            for (var urlIndex = 0; urlIndex < parts.length; urlIndex++) {
-                var url = parts[urlIndex];
-                if (url.match(/^https?:\/\/|^\//)) {
-                    var filename = url.split('/').pop();
-                    var ext = filename.split('.').pop().toLowerCase();
-                    var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
-                    var videoTags = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
-                    if (imgTags.includes(ext)) {
-                        processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
-                    } else if (videoTags.includes(ext)) {
-                        processedMsg = processedMsg.replace(url, "<video src='" + url + "' style='max-width: 200px; max-height: 200px;' controls></video><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
-                     } else {
-                         processedMsg = processedMsg.replace(url, "<a href='" + url + "' target='_blank' class='file-link'>" + filename + "</a>");
-                     }
+            if (msg.indexOf('<') === -1) {
+                var parts = msg.split(' ');
+                for (var urlIndex = 0; urlIndex < parts.length; urlIndex++) {
+                    var url = parts[urlIndex];
+                    if (url.match(/^https?:\/\/|^\//)) {
+                        var filename = url.split('/').pop();
+                        var ext = filename.split('.').pop().toLowerCase();
+                        var imgTags = ['jpg', 'jpeg', 'png', 'gif'];
+                        var videoTags = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
+                        if (imgTags.includes(ext)) {
+                            processedMsg = processedMsg.replace(url, "<img src='" + url + "' style='max-width: 200px; max-height: 200px;'><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
+                        } else if (videoTags.includes(ext)) {
+                            processedMsg = processedMsg.replace(url, "<video src='" + url + "' style='max-width: 200px; max-height: 200px;' controls></video><br><a href='" + url + "' download='" + filename + "' class='file-link'>Download " + filename + "</a>");
+
+                        } else {
+                            processedMsg = processedMsg.replace(url, "<a href='" + url + "' target='_blank' class='file-link'>" + filename + "</a>");
+                        }
+                    }
                 }
             }
             div.innerHTML = processedMsg;
@@ -1113,19 +1182,43 @@
             fetch('/messages?' + params)
                 .then(res => res.json())
                 .then(msgs => {
-                     msgs.forEach(msg => {
-                          let displayMsg;
-                          if (msg.from === 'System' && (msg.message.includes('has joined') || msg.message.includes('has left'))) {
-                              displayMsg = msg.message;
-                          } else {
-                              displayMsg = msg.from + ' <small>[' + new Date(msg.timestamp).toLocaleTimeString() + ']</small>: ' + msg.message;
-                          }
-                          addMessage(displayMsg, false);
-                      });
-                      // Apply theme to loaded messages
-                      applyTheme(theme);
-                      const messagesEl = document.getElementById('messages');
-                      messagesEl.scrollTop = messagesEl.scrollHeight - 20;
+                      msgs.forEach(msg => {
+                           if (msg.from === 'snake' && msg.message.startsWith('{')) {
+                               try {
+                                   const parsed = JSON.parse(msg.message);
+                                   if (parsed.type === 'snake_update') {
+                                       drawSnakeGame(parsed.data);
+                                       return;
+                                   }
+                               } catch {}
+                           }
+                           let displayMsg;
+                           if (msg.from === 'System' && (msg.message.includes('has joined') || msg.message.includes('has left'))) {
+                               displayMsg = msg.message;
+                           } else {
+                               displayMsg = msg.from + ' <small>[' + new Date(msg.timestamp).toLocaleTimeString() + ']</small>: ' + msg.message;
+                           }
+                           addMessage(displayMsg, false);
+                       });
+                       // Apply theme to loaded messages
+                       applyTheme(theme);
+                       const messagesEl = document.getElementById('messages');
+                       messagesEl.scrollTop = messagesEl.scrollHeight - 20;
+                       // Show/hide snake canvas
+                       if (currentChat === 'snake') {
+                           canvas.style.display = 'block';
+                           messagesEl.style.display = 'none';
+                           const width = messagesEl.offsetWidth;
+                           canvas.width = width;
+                           canvas.height = width;
+                           canvas.style.width = width + 'px';
+                           canvas.style.height = width + 'px';
+                           // Trigger update
+                           socket.emit('send_message', { username, message: 'status', to: 'snake' });
+                       } else {
+                           canvas.style.display = 'none';
+                           messagesEl.style.display = 'block';
+                       }
                  });
         }
 

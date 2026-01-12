@@ -11,29 +11,33 @@ import requests
 import json
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Initialize database and uploads folder
+
+
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    
+
     # Check if users table exists and has the correct structure
-    c.execute('''SELECT sql FROM sqlite_master WHERE type='table' AND name='users' ''')
+    c.execute(
+        '''SELECT sql FROM sqlite_master WHERE type='table' AND name='users' ''')
     table_info = c.fetchone()
-    
+
     if table_info and 'verified' not in table_info[0]:
         # Drop old table and create new one with verified column
         c.execute('DROP TABLE users')
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT, verified INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, from_user TEXT, to_user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, read INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS big5_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
     c.execute('''CREATE TABLE IF NOT EXISTS decision_sessions (username TEXT PRIMARY KEY, step INTEGER DEFAULT 0, scores TEXT DEFAULT '{}')''')
-    c.execute('''CREATE TABLE IF NOT EXISTS navigator_sessions (username TEXT PRIMARY KEY, cwd TEXT DEFAULT '')''')
+    c.execute(
+        '''CREATE TABLE IF NOT EXISTS navigator_sessions (username TEXT PRIMARY KEY, cwd TEXT DEFAULT '')''')
     c.execute('''CREATE TABLE IF NOT EXISTS ai_conversations (username TEXT PRIMARY KEY, messages TEXT DEFAULT '[]', updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
     c.execute('''CREATE TABLE IF NOT EXISTS snake_sessions (username TEXT PRIMARY KEY, board TEXT, snake TEXT, direction TEXT, food TEXT, score INTEGER DEFAULT 0, game_over INTEGER DEFAULT 0)''')
-    
+
     # Check if read column exists in messages table
     c.execute('''PRAGMA table_info(messages)''')
     columns = [row[1] for row in c.fetchall()]
@@ -43,20 +47,33 @@ def init_db():
     c.execute('''PRAGMA table_info(navigator_sessions)''')
     columns = [row[1] for row in c.fetchall()]
     if 'copied_file' not in columns:
-        c.execute('''ALTER TABLE navigator_sessions ADD COLUMN copied_file TEXT DEFAULT ""''')
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('admin', 'password', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user1', 'user1', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user2', 'user2', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('user3', 'user3', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('grok', 'grok', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('big_5', 'big_5', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('claude', 'claude', 1))
-    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)', ('gemini', 'gemini', 1))
+        c.execute(
+            '''ALTER TABLE navigator_sessions ADD COLUMN copied_file TEXT DEFAULT ""''')
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('admin', 'password', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('user1', 'user1', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('user2', 'user2', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('user3', 'user3', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('grok', 'grok', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('big_5', 'big_5', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('claude', 'claude', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('gemini', 'gemini', 1))
+    c.execute('INSERT OR IGNORE INTO users VALUES (?, ?, ?)',
+              ('snake', 'snake', 0))
     conn.commit()
     conn.close()
     os.makedirs('uploads', exist_ok=True)
 
+
 init_db()
+
 
 def render_board(board, snake, food):
     b = [row[:] for row in board]
@@ -69,7 +86,10 @@ def render_board(board, snake, food):
     b[fy][fx] = '🍎'
     return '\n'.join(''.join(row) for row in b)
 
+
 online_users = set()
+user_sids = {}
+
 
 def get_user(username):
     conn = sqlite3.connect('users.db')
@@ -79,11 +99,13 @@ def get_user(username):
     conn.close()
     return result if result else None
 
+
 def add_user(username, password):
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     try:
-        c.execute('INSERT INTO users VALUES (?, ?, ?)', (username, password, 0))
+        c.execute('INSERT INTO users VALUES (?, ?, ?)',
+                  (username, password, 0))
         conn.commit()
         success = True
     except sqlite3.IntegrityError:
@@ -91,22 +113,25 @@ def add_user(username, password):
     conn.close()
     return success
 
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'login.html')
+
 
 @app.route('/login.html')
 def login_page():
     return send_from_directory('.', 'login.html')
 
+
 @app.route('/register.html')
 def register_page():
     return send_from_directory('.', 'register.html')
 
+
 @app.route('/chat.html')
 def chat_page():
     return send_from_directory('.', 'chat.html')
-
 
 
 @app.route('/users')
@@ -117,6 +142,7 @@ def get_users():
     users = [row[0] for row in c.fetchall()]
     conn.close()
     return jsonify(users)
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -135,9 +161,11 @@ def upload_file():
             return jsonify({'error': str(e)}), 500
     return jsonify({'error': 'File processing failed'}), 400
 
+
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     return send_from_directory('uploads', filename)
+
 
 @app.route('/uploads')
 def serve_uploads_dir():
@@ -149,9 +177,11 @@ def serve_uploads_dir():
     html += '</ul>'
     return html
 
+
 @app.route('/icons/<path:filename>')
 def serve_icon(filename):
     return send_from_directory('icons', filename)
+
 
 @app.route('/icons')
 def serve_icons_dir():
@@ -162,6 +192,7 @@ def serve_icons_dir():
         html += f'<li><a href="/icons/{f}">{f}</a></li>'
     html += '</ul>'
     return html
+
 
 @app.route('/navigator_file/<path:filepath>')
 def serve_navigator_file(filepath):
@@ -174,9 +205,11 @@ def serve_navigator_file(filepath):
     else:
         return 'Access denied', 403
 
+
 @app.route('/test_route')
 def test_route():
     return jsonify({'message': 'Test route working'})
+
 
 @app.route('/messages')
 def get_messages():
@@ -184,53 +217,62 @@ def get_messages():
         username = request.args.get('username')
         to_user = request.args.get('to')
         from_user = request.args.get('from')
-        admin_user = request.args.get('admin_user')  # New parameter for admin request
-        
+        # New parameter for admin request
+        admin_user = request.args.get('admin_user')
+
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        
+
         if admin_user:
             # Admin requesting all messages from a specific user
-            c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
+            c.execute(
+                'SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (admin_user,))
             rows = c.fetchall()
             messages = []
             for row in rows:
                 messages.append({
-                    'from': row[0], 
-                    'to': row[1] if row[1] else 'Public', 
-                    'message': row[2], 
+                    'from': row[0],
+                    'to': row[1] if row[1] else 'Public',
+                    'message': row[2],
                     'timestamp': row[3]
                 })
         elif from_user:
             # Get all messages from a specific user (both public and private)
-            c.execute('SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
+            c.execute(
+                'SELECT from_user, to_user, message, timestamp FROM messages WHERE from_user = ? ORDER BY timestamp', (from_user,))
             rows = c.fetchall()
             messages = []
             for row in rows:
                 messages.append({
-                    'from': row[0], 
-                    'to': row[1] if row[1] else 'Public', 
-                    'message': row[2], 
+                    'from': row[0],
+                    'to': row[1] if row[1] else 'Public',
+                    'message': row[2],
                     'timestamp': row[3]
                 })
         elif to_user:
-            c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp', (username, to_user, to_user, username))
+            c.execute('SELECT from_user, message, timestamp FROM messages WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?) ORDER BY timestamp',
+                      (username, to_user, to_user, username))
             rows = c.fetchall()
             messages = []
             for row in rows:
-                messages.append({'from': row[0], 'message': row[1], 'timestamp': row[2]})
+                messages.append(
+                    {'from': row[0], 'message': row[1], 'timestamp': row[2]})
             # Mark messages as read
-            c.execute('UPDATE messages SET read = 1 WHERE from_user = ? AND to_user = ? AND read = 0', (to_user, username))
+            c.execute(
+                'UPDATE messages SET read = 1 WHERE from_user = ? AND to_user = ? AND read = 0', (to_user, username))
         else:
-            c.execute('SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
+            c.execute(
+                'SELECT from_user, message, timestamp FROM messages WHERE to_user IS NULL ORDER BY timestamp')
             rows = c.fetchall()
-            messages = [{'from': row[0], 'message': row[1], 'timestamp': row[2]} for row in rows]
+            messages = [{'from': row[0], 'message': row[1],
+                'timestamp': row[2]} for row in rows]
 
         conn.close()
         return jsonify(messages)
     except Exception as e:
         print(f"Error in get_messages: {e}")
         return jsonify([])
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -247,6 +289,7 @@ def login():
                 return jsonify({'success': False, 'message': 'Account pending admin verification'})
     return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -262,9 +305,11 @@ def register():
     add_user(username, password)
     return jsonify({'success': True, 'message': 'Registration successful. Awaiting admin verification.'})
 
+
 @app.route('/admin.html')
 def admin_page():
     return send_from_directory('.', 'admin.html')
+
 
 @app.route('/admin/delete_user/<username>', methods=['DELETE'])
 def delete_user(username):
@@ -273,10 +318,12 @@ def delete_user(username):
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('DELETE FROM users WHERE username = ?', (username,))
-    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?', (username, username))
+    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?',
+              (username, username))
     conn.commit()
     conn.close()
     return jsonify({'message': f'User {username} deleted successfully'})
+
 
 @app.route('/admin/delete_all_messages', methods=['DELETE'])
 def delete_all_messages():
@@ -287,15 +334,18 @@ def delete_all_messages():
     conn.close()
     return jsonify({'message': 'All messages deleted successfully'})
 
+
 @app.route('/admin/delete_all_users', methods=['DELETE'])
 def delete_all_users():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('DELETE FROM users WHERE username != ?', ('admin',))
-    c.execute('DELETE FROM messages WHERE from_user != ? AND to_user != ?', ('admin', 'admin'))
+    c.execute(
+        'DELETE FROM messages WHERE from_user != ? AND to_user != ?', ('admin', 'admin'))
     conn.commit()
     conn.close()
     return jsonify({'message': 'All users (except admin) deleted successfully'})
+
 
 @app.route('/admin/reset_db', methods=['DELETE'])
 def reset_db():
@@ -307,14 +357,17 @@ def reset_db():
     conn.close()
     return jsonify({'message': 'Database reset successfully'})
 
+
 @app.route('/admin/get_users')
 def get_users_with_verification():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('SELECT username, verified FROM users')
-    users = [{'username': row[0], 'verified': bool(row[1])} for row in c.fetchall()]
+    users = [{'username': row[0], 'verified': bool(
+        row[1])} for row in c.fetchall()]
     conn.close()
     return jsonify(users)
+
 
 @app.route('/admin/verify_user/<username>', methods=['POST'])
 def verify_user(username):
@@ -325,19 +378,23 @@ def verify_user(username):
     conn.close()
     return jsonify({'message': f'User {username} verified successfully'})
 
+
 @app.route('/unread')
 def get_unread():
     username = request.args.get('username')
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('SELECT DISTINCT from_user FROM messages WHERE to_user = ? AND read = 0', (username,))
+    c.execute(
+        'SELECT DISTINCT from_user FROM messages WHERE to_user = ? AND read = 0', (username,))
     unread = [row[0] for row in c.fetchall()]
     conn.close()
     return jsonify(unread)
 
+
 @app.route('/settings.html')
 def settings_page():
     return send_from_directory('.', 'settings.html')
+
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
@@ -345,64 +402,74 @@ def change_password():
     username = data.get('username')
     current_password = data.get('currentPassword')
     new_password = data.get('newPassword')
-    
+
     stored_password = get_user(username)
     if not stored_password:
         return jsonify({'success': False, 'message': 'User not found'}), 400
-    
+
     stored_password_hash, verified = stored_password
     if stored_password_hash != current_password:
         return jsonify({'success': False, 'message': 'Current password incorrect'}), 400
-    
+
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('UPDATE users SET password = ? WHERE username = ?', (new_password, username))
+    c.execute('UPDATE users SET password = ? WHERE username = ?',
+              (new_password, username))
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': 'Password changed successfully'})
+
 
 @app.route('/delete_account', methods=['DELETE'])
 def delete_account():
     data = request.get_json()
     username = data.get('username')
-    
+
     if username == 'admin':
         return jsonify({'success': False, 'message': 'Cannot delete admin account'})
-    
+
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     c.execute('DELETE FROM users WHERE username = ?', (username,))
-    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?', (username, username))
+    c.execute('DELETE FROM messages WHERE from_user = ? OR to_user = ?',
+              (username, username))
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': 'Account deleted successfully'})
+
 
 @socketio.on('join')
 def on_join(data):
     username = data['username']
     online_users.add(username)
+    user_sids[username] = request.sid
     join_room(username)
     # Save join message to db
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('System', None, f'{username} has joined the chat.'))
+    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)',
+              ('System', None, f'{username} has joined the chat.'))
     conn.commit()
     conn.close()
     emit('user_online', username, broadcast=True, include_self=False)
     emit('online_users', list(online_users))
 
+
 @socketio.on('leave')
 def on_leave(data):
     username = data['username']
     online_users.discard(username)
+    if username in user_sids: del user_sids[username]
     # Save leave message to db
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', ('System', None, f'{username} has left the chat.'))
+    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)',
+              ('System', None, f'{username} has left the chat.'))
     conn.commit()
     conn.close()
     emit('user_offline', username, broadcast=True, include_self=False)
     emit('online_users', list(online_users))
+
 
 @socketio.on('send_message')
 def on_send_message(data):
@@ -413,13 +480,16 @@ def on_send_message(data):
     # Store in db
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)', (username, to_user, message))
+    c.execute('INSERT INTO messages (from_user, to_user, message) VALUES (?, ?, ?)',
+              (username, to_user, message))
     conn.commit()
     conn.close()
     if to_user:
         # Private message
-        emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=to_user)
-        emit('private_message', {'from': username, 'message': message, 'to': to_user}, to=username)
+        emit('private_message', {'from': username,
+             'message': message, 'to': to_user}, to=to_user)
+        emit('private_message', {'from': username,
+             'message': message, 'to': to_user}, to=username)
         # Predefined response lists
         general_responses = [
             "That's cool!",
@@ -451,16 +521,21 @@ def on_send_message(data):
 
         # Big 5 questions
         big5_questions = [
-            {"text": "I am the life of the party.", "trait": "E", "reverse": False},
-            {"text": "I feel little concern for others.", "trait": "A", "reverse": True},
+            {"text": "I am the life of the party.",
+                "trait": "E", "reverse": False},
+            {"text": "I feel little concern for others.",
+                "trait": "A", "reverse": True},
             {"text": "I am always prepared.", "trait": "C", "reverse": False},
             {"text": "I get stressed out easily.", "trait": "N", "reverse": False},
             {"text": "I have a rich vocabulary.", "trait": "O", "reverse": False},
             {"text": "I don't talk a lot.", "trait": "E", "reverse": True},
             {"text": "I am interested in people.", "trait": "A", "reverse": False},
-            {"text": "I leave my belongings around.", "trait": "C", "reverse": True},
-            {"text": "I am relaxed most of the time.", "trait": "N", "reverse": True},
-            {"text": "I have difficulty understanding abstract ideas.", "trait": "O", "reverse": True},
+            {"text": "I leave my belongings around.",
+                "trait": "C", "reverse": True},
+            {"text": "I am relaxed most of the time.",
+                "trait": "N", "reverse": True},
+            {"text": "I have difficulty understanding abstract ideas.",
+                "trait": "O", "reverse": True},
         ]
 
         # Check if messaging a pre-programmed chat
@@ -471,7 +546,8 @@ def on_send_message(data):
             # Handle Big 5 test
             conn2 = sqlite3.connect('users.db')
             c2 = conn2.cursor()
-            c2.execute('SELECT step, scores FROM big5_sessions WHERE username = ?', (username,))
+            c2.execute(
+                'SELECT step, scores FROM big5_sessions WHERE username = ?', (username,))
             row = c2.fetchone()
             if row:
                 step, scores_str = row
@@ -479,16 +555,21 @@ def on_send_message(data):
             else:
                 step = 0
                 scores = {}
-                c2.execute('INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
+                c2.execute(
+                    'INSERT INTO big5_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
 
             # Allow restart with 's' at any time
             if message.lower() == 's':
-                ai_msg = "Question 1: " + big5_questions[0]['text'] + "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                ai_msg = "Question 1: " + \
+                    big5_questions[0]['text'] + \
+                        "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
                 step = 1
 
             if step == 0:
                 if message.lower() == 's':
-                    ai_msg = "Question 1: " + big5_questions[0]['text'] + "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
+                    ai_msg = "Question 1: " + \
+                        big5_questions[0]['text'] + \
+                            "\nReply with 1-5 (1=Strongly Disagree, 5=Strongly Agree)"
                     step = 1
                 else:
                     ai_msg = "This is the Big 5 personality test. Start by writing 's'."
@@ -509,7 +590,8 @@ def on_send_message(data):
                             # Calculate results
                             results = {}
                             for t in ['E', 'A', 'C', 'N', 'O']:
-                                avg = sum(scores.get(t, [3])) / len(scores.get(t, [3]))
+                                avg = sum(scores.get(
+                                    t, [3])) / len(scores.get(t, [3]))
                                 results[t] = "High" if avg > 3 else "Low"
                             ai_msg = f"Test complete!\nExtraversion: {results['E']}\nAgreeableness: {results['A']}\nConscientiousness: {results['C']}\nNeuroticism: {results['N']}\nOpenness: {results['O']}"
                             step = -1  # Completed
@@ -524,7 +606,8 @@ def on_send_message(data):
                     ai_msg = "Unknown state."
 
             # Update session
-            c2.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
+            c2.execute('UPDATE big5_sessions SET step = ?, scores = ? WHERE username = ?',
+                       (step, str(scores), username))
             conn2.commit()
             conn2.close()
 
@@ -532,7 +615,8 @@ def on_send_message(data):
             # Decision Matrix - guides through questions to determine life focus
             conn3 = sqlite3.connect('users.db')
             c3 = conn3.cursor()
-            c3.execute('SELECT step, scores FROM decision_sessions WHERE username = ?', (username,))
+            c3.execute(
+                'SELECT step, scores FROM decision_sessions WHERE username = ?', (username,))
             row = c3.fetchone()
             step = 0  # Initialize
             scores = {}
@@ -540,11 +624,13 @@ def on_send_message(data):
                 step, scores_str = row
                 scores = eval(scores_str)  # Simple dict
             else:
-                c3.execute('INSERT INTO decision_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
+                c3.execute(
+                    'INSERT INTO decision_sessions (username, step, scores) VALUES (?, ?, ?)', (username, 0, '{}'))
 
             print(f"Decision matrix: message={repr(message)}, step={step}")
             # Allow restart with 's' at any time
-            print(f"Checking restart: '{message.lower()}' == 's'? {message.lower() == 's'}")
+            print(
+                f"Checking restart: '{message.lower()}' == 's'? {message.lower() == 's'}")
             if message.lower() == 's':
                 print("Restart triggered")
                 scores = {}  # Reset scores on restart
@@ -592,7 +678,8 @@ def on_send_message(data):
                     ai_msg = "What do you want to learn?\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
                     step = 2
                 else:
-                    question = "What do you want to learn?" if scores.get('learning') else "What are you good at?"
+                    question = "What do you want to learn?" if scores.get(
+                        'learning') else "What are you good at?"
                     ai_msg = f"Invalid. {question}\nA: Social\nB: Technical\nC: Creative\nD: Mathematical\nE: Physical\nF: Nothing\nReply with A, B, C, D, E, or F."
                     step = 2
 
@@ -625,7 +712,8 @@ def on_send_message(data):
 
             print(f"Decision matrix response: {ai_msg}")
             # Update session
-            c3.execute('UPDATE decision_sessions SET step = ?, scores = ? WHERE username = ?', (step, str(scores), username))
+            c3.execute('UPDATE decision_sessions SET step = ?, scores = ? WHERE username = ?',
+                       (step, str(scores), username))
             conn3.commit()
             conn3.close()
 
@@ -633,297 +721,178 @@ def on_send_message(data):
             ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'gemini':
             ai_msg = random.choice(general_responses)  # Placeholder
-        elif to_user == 'navigator':
-            print("Navigator command from", username, ":", message)
-            # Folder navigation tool
-            import os
-            root = os.getcwd()
-            conn_nav = sqlite3.connect('users.db')
-            c_nav = conn_nav.cursor()
-            c_nav.execute('SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
-            row = c_nav.fetchone()
-            cwd = row[0] if row else ''
-            copied_file = row[1] if row else ''
-            full_path = os.path.join(root, cwd)
-            cmd = message.strip()
-            if cmd.lower() == 'ls':
-                try:
-                    files = os.listdir(full_path)
-                    output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
-                    for f in files:
-                        f_path = os.path.join(cwd, f) if cwd else f
-                        escaped_f = html.escape(f)
-                        if os.path.isdir(os.path.join(full_path, f)):
-                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
-                        else:
-                            ext = f.split('.')[-1].lower() if '.' in f else ''
-                            if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                                img_url = '/navigator_file/' + quote(f_path)
-                                output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + escaped_f + '</span></div>'
-                            else:
-                                output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + escaped_f + '</span></div>'
-                    output_html += '</div>'
-                    ai_msg = output_html
-                except Exception as e:
-                    ai_msg = f'Error listing directory: {e}'
-            elif cmd.lower() == 'pwd':
-                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
-            elif cmd.lower() == 'home':
-                cwd = ''
-                ai_msg = 'Returned to root directory.'
-            elif cmd.lower() == 'back':
-                # Go back one directory, same as cd ..
-                dir_name = '..'
-                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
-                new_full = os.path.join(root, new_cwd)
-                try:
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
-                        cwd = new_cwd
-                        ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
-                    else:
-                        ai_msg = 'Cannot go back further (at root).'
-                except:
-                    ai_msg = 'Cannot go back.'
-            elif cmd.lower().startswith('cd '):
-                dir_name = cmd[3:].strip()
-                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
-                new_full = os.path.join(root, new_cwd)
-                try:
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
-                        cwd = new_cwd
-                        ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
-                    else:
-                        ai_msg = 'Invalid directory or access denied'
-                except:
-                    ai_msg = 'Invalid directory'
-            elif cmd.lower().startswith('open '):
-                filename = cmd[5:].strip()
-                file_path = os.path.join(cwd, filename) if cwd else filename
-                full_file = os.path.join(root, file_path)
-                try:
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
-                        url = f'/navigator_file/{file_path}'
-                        ext = filename.split('.')[-1].lower() if '.' in filename else ''
-                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
-                        else:
-                            ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
-                    else:
-                        ai_msg = 'File not found or access denied'
-                except:
-                    ai_msg = 'Error opening file'
-            elif cmd.lower().startswith('read '):
-                 filename = cmd[5:].strip()
-                 file_path = os.path.join(cwd, filename) if cwd else filename
-                 full_file = os.path.join(root, file_path)
-                 try:
-                     if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
-                         with open(full_file, 'r', encoding='utf-8') as f:
-                             content = f.read(10000)
-                         ai_msg = f'<div style="max-height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;"><pre>{html.escape(content)}</pre></div>'
-                     else:
-                         ai_msg = 'File not found or access denied'
-                 except Exception as e:
-                     ai_msg = f'Error reading file: {e}'
-            elif cmd.lower().startswith('mkdir '):
-                dirname = cmd[6:].strip()
-                new_dir_path = os.path.join(cwd, dirname) if cwd else dirname
-                full_new_dir = os.path.join(root, new_dir_path)
-                try:
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_new_dir)]) == os.path.abspath(root):
-                        os.makedirs(full_new_dir, exist_ok=True)
-                        ai_msg = f'Directory {dirname} created.'
-                    else:
-                        ai_msg = 'Cannot create directory outside root'
-                except Exception as e:
-                    ai_msg = f'Error creating directory: {e}'
-            elif cmd.lower().startswith('copy '):
-                if username != 'admin':
-                    ai_msg = 'Only admin can use copy command'
-                else:
-                    filename = cmd[5:].strip()
-                    file_path = os.path.join(cwd, filename) if cwd else filename
-                    full_file = os.path.join(root, file_path)
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
-                        copied_file = file_path
-                        ai_msg = f'Copied {filename}'
-                    else:
-                        ai_msg = 'File not found or access denied'
-            elif cmd.lower() == 'paste':
-                if username != 'admin':
-                    ai_msg = 'Only admin can use paste command'
-                else:
-                    if copied_file:
-                        basename = os.path.basename(copied_file)
-                        dest_path = os.path.join(cwd, basename) if cwd else basename
-                        full_dest = os.path.join(root, dest_path)
-                        if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_dest)]) == os.path.abspath(root):
-                            shutil.copy(os.path.join(root, copied_file), full_dest)
-                            ai_msg = f'Pasted {basename}'
-                        else:
-                            ai_msg = 'Cannot paste outside root'
-                    else:
-                        ai_msg = 'No file copied'
-            elif cmd.lower().startswith('delete '):
-                if username != 'admin':
-                    ai_msg = 'Only admin can use delete command'
-                else:
-                    filename = cmd[7:].strip()
-                    file_path = os.path.join(cwd, filename) if cwd else filename
-                    full_file = os.path.join(root, file_path)
-                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root):
-                        if os.path.isfile(full_file):
-                            os.remove(full_file)
-                            ai_msg = f'Deleted file {filename}'
-                        elif os.path.isdir(full_file):
-                            shutil.rmtree(full_file)
-                            ai_msg = f'Deleted directory {filename}'
-                        else:
-                            ai_msg = 'File or directory not found'
-                    else:
-                        ai_msg = 'Cannot delete outside root'
-            else:
-                 ai_msg = 'Commands: ls (list files visually), pwd (current dir), cd <dir> (change dir), back (go up one dir), home (return to root), open <file> (open file), read <file> (display file content with scrollbar), mkdir <dir> (create directory), copy <file> (copy file - admin only), paste (paste copied file - admin only), delete <file> (delete file/dir - admin only)'
-            # Update session
-            if row:
-                c_nav.execute('UPDATE navigator_sessions SET cwd = ?, copied_file = ? WHERE username = ?', (cwd, copied_file, username))
-            else:
-                c_nav.execute('INSERT INTO navigator_sessions (username, cwd, copied_file) VALUES (?, ?, ?)', (username, cwd, copied_file))
-            conn_nav.commit()
-            conn_nav.close()
-            print("Navigator responding with", repr(ai_msg[:50]) if ai_msg else "None")
-
-        elif to_user == 'snake':
-            conn_snake = sqlite3.connect('users.db')
-               c_snake = conn_snake.cursor()
-               c_snake.execute('SELECT board, snake, direction, food, score, game_over FROM snake_sessions WHERE username = ?', (username,))
-               row = c_snake.fetchone()
-               if row:
-                   board_str, snake_str, direction, food_str, score, game_over = row
-                   board = json.loads(board_str)
-                   snake = json.loads(snake_str)
-                   food = json.loads(food_str)
-               else:
-                   # Init game
-                   width, height = 10, 10
-                   board = [['.' for _ in range(width)] for _ in range(height)]
-                   snake = [[width//2, height//2]]
-                   direction = 'right'
-                   food = [random.randint(0, width-1), random.randint(0, height-1)]
-                   score = 0
-                   game_over = 0
-                   c_snake.execute('INSERT INTO snake_sessions (username, board, snake, direction, food, score, game_over) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                                   (username, json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over))
-   
-               if game_over:
-                   if message.lower() == 'start':
-                       # Reset
-                       width, height = 10, 10
-                       board = [['.' for _ in range(width)] for _ in range(height)]
-                       snake = [[width//2, height//2]]
-                       direction = 'right'
-                       food = [random.randint(0, width-1), random.randint(0, height-1)]
-                       score = 0
-                       game_over = 0
-                       c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
-                                       (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
-                       ai_msg = 'New game started!\n' + render_board(board, snake, food)
-                   else:
-                       ai_msg = f'Game over! Score: {score}. Send "start" to play again.'
-               else:
-                   # Process move
-                   move = message.lower().strip()
-                   new_dir = None
-                   if move in ['up', 'w']:
-                       new_dir = 'up'
-                   elif move in ['down', 's']:
-                       new_dir = 'down'
-                   elif move in ['left', 'a']:
-                       new_dir = 'left'
-                   elif move in ['right', 'd']:
-                       new_dir = 'right'
-                   else:
-                       ai_msg = 'Invalid move. Use w/a/s/d or up/down/left/right.'
-   
-                   if new_dir:
-                       # Update direction if not opposite
-                       opposites = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
-                       if new_dir != opposites.get(direction):
-                           direction = new_dir
-                       # Move snake
-                       head = snake[0].copy()
-                       if direction == 'up':
-                           head[1] -= 1
-                       elif direction == 'down':
-                           head[1] += 1
-                       elif direction == 'left':
-                           head[0] -= 1
-                       elif direction == 'right':
-                           head[0] += 1
-                       # Check walls
-                       if head[0] < 0 or head[0] >= len(board[0]) or head[1] < 0 or head[1] >= len(board):
-                           game_over = 1
-                           ai_msg = f'Game over! Hit wall. Score: {score}. Send "start" to play again.'
-                       # Check self
-                       elif head in snake:
-                           game_over = 1
-                           ai_msg = f'Game over! Hit self. Score: {score}. Send "start" to play again.'
-                       else:
-                           snake.insert(0, head)
-                           if head == food:
-                               score += 1
-                               food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
-                               while food in snake:
-                                   food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
-                           else:
-                               snake.pop()
-                           ai_msg = f'Score: {score}\n' + render_board(board, snake, food)
-                       c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
-                                       (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
-               conn_snake.commit()
-               conn_snake.close()
-   
-        elif to_user == 'hf_ai':
-        hf_token = os.environ.get('HF_TOKEN')
-        if not hf_token:
-            ai_msg = "AI not configured."
-        else:
-            conn_ai = sqlite3.connect('users.db')
-            c_ai = conn_ai.cursor()
-            c_ai.execute('SELECT messages FROM ai_conversations WHERE username = ?', (username,))
-            row = c_ai.fetchone()
-            history = eval(row[0]) if row else []
-            history.append({"role": "user", "content": message})
-            history = history[-10:]  # Keep last 10
-            try:
-                response = requests.post(
-                "https://router.huggingface.co/v1/chat/completions",
-                headers={"Authorization": f"Bearer {hf_token}"},
-                json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
-                )
-                data = response.json()
-                try:
-                    response = requests.post(
-                        "https://router.huggingface.co/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {hf_token}"},
-                        json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
-                    )
-                    data = response.json()
-                    if "choices" in data:
-                        ai_reply = data["choices"][0]["message"].get("content", "No response from AI")
-                    else:
-                        ai_reply = f"API error: {data.get('error', 'Unknown error')}"
-                except Exception as e:
-                    ai_msg = "Sorry, AI service unavailable."
-                history.append({"role": "assistant", "content": ai_reply})
-                c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
-                conn_ai.commit()
-                ai_msg = ai_reply
-                print("AI responding with:", ai_msg)
-            except:
-                ai_msg = "Sorry, AI service unavailable."
-            conn_ai.close()
-                    
+#        elif to_user == 'navigator':
+#            print("Navigator command from", username, ":", message)
+#            # Folder navigation tool
+#            import os
+#            root = os.getcwd()
+#            conn_nav = sqlite3.connect('users.db')
+#            c_nav = conn_nav.cursor()
+#            c_nav.execute(
+#                'SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
+#            row = c_nav.fetchone()
+#            cwd = row[0] if row else ''
+#            copied_file = row[1] if row else ''
+#            full_path = os.path.join(root, cwd)
+#            cmd = message.strip()
+#            if cmd.lower() == 'ls':
+#                files = os.listdir(full_path)
+#                output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
+#                for f in files:
+#                    f_path = os.path.join(cwd, f) if cwd else f
+#                    escaped_f = html.escape(f)
+#                    if os.path.isdir(os.path.join(full_path, f)):
+#                        output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
+#                    else:
+#                        ext = f.split('.')[-1].lower() if '.' in f else ''
+#                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+#                            img_url = '/navigator_file/' + quote(f_path)
+#                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + \
+#                                '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + \
+#                                    escaped_f + '</span></div>'
+#                        else:
+#                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + \
+#                                escaped_f + '</span></div>'
+#                output_html += '</div>'
+#                ai_msg = output_html
+#            elif cmd.lower() == 'pwd':
+#                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
+#            elif cmd.lower() == 'home':
+#                cwd = ''
+#                ai_msg = 'Returned to root directory.'
+#            elif cmd.lower() == 'back':
+#                # Go back one directory, same as cd ..
+#                dir_name = '..'
+#                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+#                new_full = os.path.join(root, new_cwd)
+#                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+#                    cwd = new_cwd
+#                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+#                else:
+#                    ai_msg = 'Cannot go back further (at root).'
+#            elif cmd.lower().startswith('cd '):
+#                dir_name = cmd[3:].strip()
+#                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+#                new_full = os.path.join(root, new_cwd)
+#                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+#                    cwd = new_cwd
+#                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+#                else:
+#                    ai_msg = 'Invalid directory or access denied'
+#            elif cmd.lower().startswith('open '):
+#                filename = cmd[5:].strip()
+#                file_path = os.path.join(cwd, filename) if cwd else filename
+#                full_file = os.path.join(root, file_path)
+#                try:
+#                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
+#                        url = f'/navigator_file/{file_path}'
+#                        ext = filename.split('.')[-1].lower() if '.' in filename else ''
+#                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+#                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
+# else:
+# ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
+        if False:  # elif to_user == 'snake':
+            pass
+#             conn_snake = sqlite3.connect('users.db')
+#             c_snake = conn_snake.cursor()
+#             c_snake.execute(
+#                 'SELECT board, snake, direction, food, score, game_over FROM snake_sessions WHERE username = ?', (username,))
+#             row = c_snake.fetchone()
+#             if row:
+#                 board_str, snake_str, direction, food_str, score, game_over = row
+#                 board = json.loads(board_str)
+#                 snake = json.loads(snake_str)
+#                 food = json.loads(food_str)
+#             else:
+#                 # Init game
+#                 width, height = 10, 10
+#                 board = [['.' for _ in range(width)] for _ in range(height)]
+#                 snake = [[width//2, height//2]]
+#                 direction = 'right'
+#                 food = [random.randint(0, width-1),
+#                 random.randint(0, height-1)]
+#                 score = 0
+#                 game_over = 0
+#             c_snake.execute('INSERT INTO snake_sessions (username, board, snake, direction, food, score, game_over) VALUES (?, ?, ?, ?, ?, ?, ?)',
+#             (username, json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over))
+#             ai_msg = json.dumps({'type': 'snake_update', 'data': {
+#                 'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+# 
+#     if message.lower() == 'status':
+#         ai_msg = json.dumps({'type': 'snake_update', 'data': {
+#                             'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#     elif game_over:
+#         if message.lower() == 'start':
+#             # Reset
+#             width, height = 10, 10
+#             board = [['.' for _ in range(width)] for _ in range(height)]
+#             snake = [[width//2, height//2]]
+#             direction = 'right'
+#             food = [random.randint(0, width-1), random.randint(0, height-1)]
+#             score = 0
+#             game_over = 0
+#             c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+#             (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+#             ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#         else:
+#             ai_msg = 'Game over! Score: ' + str(score) + '. Send "start" to play again.'
+#     else:
+#             # Grow snake
+#             snake.insert(0, head)
+#             if head == food:
+#                 score += 1
+#                 food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+#                 while food in snake:
+#                     food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+#             else:
+#                 snake.pop()
+#                 ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#         c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+#         (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+#         conn_snake.commit()
+#         conn_snake.close()
+#             
+# #            elif to_user == 'hf_ai':
+# #        hf_token = os.environ.get('HF_TOKEN')
+# #        if not hf_token:
+# #            ai_msg = "AI not configured."
+# #        else:
+# #            conn_ai = sqlite3.connect('users.db')
+# #            c_ai = conn_ai.cursor()
+# #            c_ai.execute('SELECT messages FROM ai_conversations WHERE username = ?', (username,))
+# #            row = c_ai.fetchone()
+# #            history = eval(row[0]) if row else []
+# #            history.append({"role": "user", "content": message})
+# #            history = history[-10:]  # Keep last 10
+# #            try:
+# #                response = requests.post(
+# #                "https://router.huggingface.co/v1/chat/completions",
+# #                headers={"Authorization": f"Bearer {hf_token}"},
+# #                json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
+# #                )
+# #                data = response.json()
+# #                try:
+# #                    response = requests.post(
+# #                        "https://router.huggingface.co/v1/chat/completions",
+# #                        headers={"Authorization": f"Bearer {hf_token}"},
+# #                        json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
+# #                    )
+# #                    data = response.json()
+# #                    if "choices" in data:
+# #                        ai_reply = data["choices"][0]["message"].get("content", "No response from AI")
+# #                    else:
+# #                        ai_reply = f"API error: {data.get('error', 'Unknown error')}"
+# #                except Exception as e:
+# #                    ai_msg = "Sorry, AI service unavailable."
+# #                history.append({"role": "assistant", "content": ai_reply})
+# #                c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
+# #                conn_ai.commit()
+# #                ai_msg = ai_reply
+# #                print("AI responding with:", ai_msg)
+# #            except:
+# #                ai_msg = "Sorry, AI service unavailable."
+# #            conn_ai.close()
+# #                    
     else:
         ai_msg = "Unknown bot"
 
