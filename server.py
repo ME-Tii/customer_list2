@@ -721,177 +721,179 @@ def on_send_message(data):
             ai_msg = random.choice(general_responses)  # Placeholder
         elif to_user == 'gemini':
             ai_msg = random.choice(general_responses)  # Placeholder
-#        elif to_user == 'navigator':
-#            print("Navigator command from", username, ":", message)
-#            # Folder navigation tool
-#            import os
-#            root = os.getcwd()
-#            conn_nav = sqlite3.connect('users.db')
-#            c_nav = conn_nav.cursor()
-#            c_nav.execute(
-#                'SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
-#            row = c_nav.fetchone()
-#            cwd = row[0] if row else ''
-#            copied_file = row[1] if row else ''
-#            full_path = os.path.join(root, cwd)
-#            cmd = message.strip()
-#            if cmd.lower() == 'ls':
-#                files = os.listdir(full_path)
-#                output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
-#                for f in files:
-#                    f_path = os.path.join(cwd, f) if cwd else f
-#                    escaped_f = html.escape(f)
-#                    if os.path.isdir(os.path.join(full_path, f)):
-#                        output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
-#                    else:
-#                        ext = f.split('.')[-1].lower() if '.' in f else ''
-#                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
-#                            img_url = '/navigator_file/' + quote(f_path)
-#                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + \
-#                                '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + \
-#                                    escaped_f + '</span></div>'
-#                        else:
-#                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + \
-#                                escaped_f + '</span></div>'
-#                output_html += '</div>'
-#                ai_msg = output_html
-#            elif cmd.lower() == 'pwd':
-#                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
-#            elif cmd.lower() == 'home':
-#                cwd = ''
-#                ai_msg = 'Returned to root directory.'
-#            elif cmd.lower() == 'back':
-#                # Go back one directory, same as cd ..
-#                dir_name = '..'
-#                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
-#                new_full = os.path.join(root, new_cwd)
-#                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
-#                    cwd = new_cwd
-#                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
-#                else:
-#                    ai_msg = 'Cannot go back further (at root).'
-#            elif cmd.lower().startswith('cd '):
-#                dir_name = cmd[3:].strip()
-#                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
-#                new_full = os.path.join(root, new_cwd)
-#                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
-#                    cwd = new_cwd
-#                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
-#                else:
-#                    ai_msg = 'Invalid directory or access denied'
-#            elif cmd.lower().startswith('open '):
-#                filename = cmd[5:].strip()
-#                file_path = os.path.join(cwd, filename) if cwd else filename
-#                full_file = os.path.join(root, file_path)
-#                try:
-#                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
-#                        url = f'/navigator_file/{file_path}'
-#                        ext = filename.split('.')[-1].lower() if '.' in filename else ''
-#                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
-#                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
-# else:
-# ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
+        elif to_user == 'navigator':
+            print("Navigator command from", username, ":", message)
+            # Folder navigation tool
+            import os
+            root = os.getcwd()
+            conn_nav = sqlite3.connect('users.db')
+            c_nav = conn_nav.cursor()
+            c_nav.execute(
+                'SELECT cwd, copied_file FROM navigator_sessions WHERE username = ?', (username,))
+            row = c_nav.fetchone()
+            cwd = row[0] if row else ''
+            copied_file = row[1] if row else ''
+            full_path = os.path.join(root, cwd)
+            cmd = message.strip()
+            if cmd.lower() == 'ls':
+                files = os.listdir(full_path)
+                output_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background-color: #313030; color: #ffffff; font-family: \'Press Start 2P\', monospace;">'
+                for f in files:
+                    f_path = os.path.join(cwd, f) if cwd else f
+                    escaped_f = html.escape(f)
+                    if os.path.isdir(os.path.join(full_path, f)):
+                        output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center; cursor: pointer;"><span>📁 ' + escaped_f + '</span></div>'
+                    else:
+                        ext = f.split('.')[-1].lower() if '.' in f else ''
+                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                            img_url = '/navigator_file/' + quote(f_path)
+                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><img src="' + img_url + \
+                                '" style="max-width: 100px; max-height: 100px;" onerror="this.style.display=\'none\'"><br><span>' + \
+                                    escaped_f + '</span></div>'
+                        else:
+                            output_html += '<div style="border: 1px solid #5c5c5c; padding: 10px; width: 150px; text-align: center;"><span>📄 ' + \
+                                escaped_f + '</span></div>'
+                output_html += '</div>'
+                ai_msg = output_html
+            elif cmd.lower() == 'pwd':
+                ai_msg = f'Current directory: /{cwd}' if cwd else 'Current directory: /'
+            elif cmd.lower() == 'home':
+                cwd = ''
+                ai_msg = 'Returned to root directory.'
+            elif cmd.lower() == 'back':
+                # Go back one directory, same as cd ..
+                dir_name = '..'
+                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+                new_full = os.path.join(root, new_cwd)
+                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+                    cwd = new_cwd
+                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+                else:
+                    ai_msg = 'Cannot go back further (at root).'
+            elif cmd.lower().startswith('cd '):
+                dir_name = cmd[3:].strip()
+                new_cwd = os.path.normpath(os.path.join(cwd, dir_name))
+                new_full = os.path.join(root, new_cwd)
+                if os.path.commonpath([os.path.abspath(root), os.path.abspath(new_full)]) == os.path.abspath(root) and os.path.isdir(new_full):
+                    cwd = new_cwd
+                    ai_msg = f'Changed to /{cwd}' if cwd else 'Changed to /'
+                else:
+                    ai_msg = 'Invalid directory or access denied'
+            elif cmd.lower().startswith('open '):
+                filename = cmd[5:].strip()
+                file_path = os.path.join(cwd, filename) if cwd else filename
+                full_file = os.path.join(root, file_path)
+                try:
+                    if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
+                        url = f'/navigator_file/{file_path}'
+                        ext = filename.split('.')[-1].lower() if '.' in filename else ''
+                        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                            ai_msg = f'<img src="{url}" style="max-width: 300px; max-height: 300px;"><br><a href="{url}" target="_blank">Open {filename}</a>'
+                        else:
+                            ai_msg = f'<a href="{url}" target="_blank">Open {filename}</a>'
+                except:
+                    ai_msg = 'Error opening file'
         if False:  # elif to_user == 'snake':
             pass
-#             conn_snake = sqlite3.connect('users.db')
-#             c_snake = conn_snake.cursor()
-#             c_snake.execute(
-#                 'SELECT board, snake, direction, food, score, game_over FROM snake_sessions WHERE username = ?', (username,))
-#             row = c_snake.fetchone()
-#             if row:
-#                 board_str, snake_str, direction, food_str, score, game_over = row
-#                 board = json.loads(board_str)
-#                 snake = json.loads(snake_str)
-#                 food = json.loads(food_str)
-#             else:
-#                 # Init game
-#                 width, height = 10, 10
-#                 board = [['.' for _ in range(width)] for _ in range(height)]
-#                 snake = [[width//2, height//2]]
-#                 direction = 'right'
-#                 food = [random.randint(0, width-1),
-#                 random.randint(0, height-1)]
-#                 score = 0
-#                 game_over = 0
-#             c_snake.execute('INSERT INTO snake_sessions (username, board, snake, direction, food, score, game_over) VALUES (?, ?, ?, ?, ?, ?, ?)',
-#             (username, json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over))
-#             ai_msg = json.dumps({'type': 'snake_update', 'data': {
-#                 'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
-# 
-#     if message.lower() == 'status':
-#         ai_msg = json.dumps({'type': 'snake_update', 'data': {
-#                             'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
-#     elif game_over:
-#         if message.lower() == 'start':
-#             # Reset
-#             width, height = 10, 10
-#             board = [['.' for _ in range(width)] for _ in range(height)]
-#             snake = [[width//2, height//2]]
-#             direction = 'right'
-#             food = [random.randint(0, width-1), random.randint(0, height-1)]
-#             score = 0
-#             game_over = 0
-#             c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
-#             (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
-#             ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
-#         else:
-#             ai_msg = 'Game over! Score: ' + str(score) + '. Send "start" to play again.'
-#     else:
-#             # Grow snake
-#             snake.insert(0, head)
-#             if head == food:
-#                 score += 1
-#                 food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
-#                 while food in snake:
-#                     food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
-#             else:
-#                 snake.pop()
-#                 ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
-#         c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
-#         (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
-#         conn_snake.commit()
-#         conn_snake.close()
-#             
-# #            elif to_user == 'hf_ai':
-# #        hf_token = os.environ.get('HF_TOKEN')
-# #        if not hf_token:
-# #            ai_msg = "AI not configured."
-# #        else:
-# #            conn_ai = sqlite3.connect('users.db')
-# #            c_ai = conn_ai.cursor()
-# #            c_ai.execute('SELECT messages FROM ai_conversations WHERE username = ?', (username,))
-# #            row = c_ai.fetchone()
-# #            history = eval(row[0]) if row else []
-# #            history.append({"role": "user", "content": message})
-# #            history = history[-10:]  # Keep last 10
-# #            try:
-# #                response = requests.post(
-# #                "https://router.huggingface.co/v1/chat/completions",
-# #                headers={"Authorization": f"Bearer {hf_token}"},
-# #                json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
-# #                )
-# #                data = response.json()
-# #                try:
-# #                    response = requests.post(
-# #                        "https://router.huggingface.co/v1/chat/completions",
-# #                        headers={"Authorization": f"Bearer {hf_token}"},
-# #                        json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
-# #                    )
-# #                    data = response.json()
-# #                    if "choices" in data:
-# #                        ai_reply = data["choices"][0]["message"].get("content", "No response from AI")
-# #                    else:
-# #                        ai_reply = f"API error: {data.get('error', 'Unknown error')}"
-# #                except Exception as e:
-# #                    ai_msg = "Sorry, AI service unavailable."
-# #                history.append({"role": "assistant", "content": ai_reply})
-# #                c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
-# #                conn_ai.commit()
-# #                ai_msg = ai_reply
-# #                print("AI responding with:", ai_msg)
-# #            except:
-# #                ai_msg = "Sorry, AI service unavailable."
-# #            conn_ai.close()
+#              conn_snake = sqlite3.connect('users.db')
+#              c_snake = conn_snake.cursor()
+#              c_snake.execute(
+#                  'SELECT board, snake, direction, food, score, game_over FROM snake_sessions WHERE username = ?', (username,))
+#              row = c_snake.fetchone()
+#              if row:
+#                  board_str, snake_str, direction, food_str, score, game_over = row
+#                  board = json.loads(board_str)
+#                  snake = json.loads(snake_str)
+#                  food = json.loads(food_str)
+#              else:
+#                  # Init game
+#                  width, height = 10, 10
+#                  board = [['.' for _ in range(width)] for _ in range(height)]
+#                  snake = [[width//2, height//2]]
+#                  direction = 'right'
+#                  food = [random.randint(0, width-1),
+#                  random.randint(0, height-1)]
+#                  score = 0
+#                  game_over = 0
+#              c_snake.execute('INSERT INTO snake_sessions (username, board, snake, direction, food, score, game_over) VALUES (?, ?, ?, ?, ?, ?, ?)',
+#              (username, json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over))
+#              ai_msg = json.dumps({'type': 'snake_update', 'data': {
+#                  'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#  
+#      if message.lower() == 'status':
+#          ai_msg = json.dumps({'type': 'snake_update', 'data': {
+#                              'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#      elif game_over:
+#          if message.lower() == 'start':
+#              # Reset
+#              width, height = 10, 10
+#              board = [['.' for _ in range(width)] for _ in range(height)]
+#              snake = [[width//2, height//2]]
+#              direction = 'right'
+#              food = [random.randint(0, width-1), random.randint(0, height-1)]
+#              score = 0
+#              game_over = 0
+#              c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+#              (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+#              ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#          else:
+#              ai_msg = 'Game over! Score: ' + str(score) + '. Send "start" to play again.'
+#      else:
+#              # Grow snake
+#              snake.insert(0, head)
+#              if head == food:
+#                  score += 1
+#                  food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+#                  while food in snake:
+#                      food = [random.randint(0, len(board[0])-1), random.randint(0, len(board))-1]
+#              else:
+#                  snake.pop()
+#                  ai_msg = json.dumps({'type': 'snake_update', 'data': {'board': board, 'snake': snake, 'food': food, 'score': score, 'game_over': game_over}})
+#          c_snake.execute('UPDATE snake_sessions SET board = ?, snake = ?, direction = ?, food = ?, score = ?, game_over = ? WHERE username = ?',
+#          (json.dumps(board), json.dumps(snake), direction, json.dumps(food), score, game_over, username))
+#          conn_snake.commit()
+#          conn_snake.close()
+#              
+#  #            elif to_user == 'hf_ai':
+#  #        hf_token = os.environ.get('HF_TOKEN')
+#  #        if not hf_token:
+#  #            ai_msg = "AI not configured."
+#  #        else:
+#  #            conn_ai = sqlite3.connect('users.db')
+#  #            c_ai = conn_ai.cursor()
+#  #            c_ai.execute('SELECT messages FROM ai_conversations WHERE username = ?', (username,))
+#  #            row = c_ai.fetchone()
+#  #            history = eval(row[0]) if row else []
+#  #            history.append({"role": "user", "content": message})
+#  #            history = history[-10:]  # Keep last 10
+#  #            try:
+#  #                response = requests.post(
+#  #                "https://router.huggingface.co/v1/chat/completions",
+#  #                headers={"Authorization": f"Bearer {hf_token}"},
+#  #                json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
+#  #                )
+#  #                data = response.json()
+#  #                try:
+#  #                    response = requests.post(
+#  #                        "https://router.huggingface.co/v1/chat/completions",
+#  #                        headers={"Authorization": f"Bearer {hf_token}"},
+#  #                        json={"model": "microsoft/DialoGPT-medium", "messages": history}, timeout=10
+#  #                    )
+#  #                    data = response.json()
+#  #                    if "choices" in data:
+#  #                        ai_reply = data["choices"][0]["message"].get("content", "No response from AI")
+#  #                    else:
+#  #                        ai_reply = f"API error: {data.get('error', 'Unknown error')}"
+#  #                except Exception as e:
+#  #                    ai_msg = "Sorry, AI service unavailable."
+#  #                history.append({"role": "assistant", "content": ai_reply})
+#  #                c_ai.execute('INSERT OR REPLACE INTO ai_conversations (username, messages) VALUES (?, ?)', (username, str(history)))
+#  #                conn_ai.commit()
+#  #                ai_msg = ai_reply
+#  #                print("AI responding with:", ai_msg)
+#  #            except:
+#  #                ai_msg = "Sorry, AI service unavailable."
+#  #            conn_ai.close()
 # #                    
     else:
         ai_msg = "Unknown bot"
