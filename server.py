@@ -913,6 +913,13 @@ def on_send_message(data):
     if not to_user:
         emit('public_message', {'from': username, 'message': message}, broadcast=True)
 
+# Remove snake user
+conn = sqlite3.connect('users.db')
+c = conn.cursor()
+c.execute('DELETE FROM users WHERE username = ?', ('snake',))
+conn.commit()
+conn.close()
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     socketio.run(app, host='0.0.0.0', debug=False, allow_unsafe_werkzeug=True, port=port)
