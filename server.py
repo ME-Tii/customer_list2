@@ -790,14 +790,12 @@ def on_send_message(data):
                     if os.path.commonpath([os.path.abspath(root), os.path.abspath(full_file)]) == os.path.abspath(root) and os.path.isfile(full_file):
                         url = f'/navigator_file/{file_path}'
                         ext = filename.split('.')[-1].lower() if '.' in filename else ''
-                if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                    ai_msg = f'Image: {url}'
-                else:
-                    ai_msg = f'File: {url}'
-            else:
-                ai_msg = 'Invalid command. Type "help" for available commands.'
-                except:
-                    ai_msg = 'Error opening file'
+                    if ext in ['jpg', 'jpeg', 'png', 'gif']:
+                        ai_msg = f'Image: {url}'
+                    else:
+                        ai_msg = f'File: {url}'
+                    except:
+                        ai_msg = 'Error opening file'
         if False:  # elif to_user == 'snake':
             pass
 #              conn_snake = sqlite3.connect('users.db')
